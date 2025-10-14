@@ -10,6 +10,7 @@ import Login from './pages/Login'
 import AdminPanel from './pages/AdminPanel'
 import ReportesAdmin from './pages/ReportesAdmin'
 import './App.css'
+import './assets/compatibility-fix.css'
 
 
 function Nosotros() {

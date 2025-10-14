@@ -1,0 +1,127 @@
+/* ===== HOTFIX PARA COMPATIBILIDAD macOS/Windows ===== */
+
+/* Forzar colores explícitos para todos los textos */
+body, html {
+  color: #333333 !important;
+  background-color: #F7F7F7 !important;
+}
+
+/* Títulos principales */
+h1, h2, h3, h4, h5, h6 {
+  color: #333333 !important;
+  font-weight: bold !important;
+}
+
+/* Párrafos y texto general */
+p, span, div, label {
+  color: #666666 !important;
+}
+
+/* Links */
+a {
+  color: #2E8B57 !important;
+}
+
+/* Inputs y formularios */
+input, select, textarea {
+  color: #333333 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #bdbdbd !important;
+}
+
+/* Botones */
+button {
+  color: #ffffff !important;
+}
+
+/* Navegación */
+.navbar, .navbar * {
+  color: #333333 !important;
+}
+
+.navbar a {
+  color: #333333 !important;
+}
+
+/* Panel de administración */
+.admin-panel, .admin-panel * {
+  color: #333333 !important;
+}
+
+/* Tablas */
+table, table * {
+  color: #333333 !important;
+}
+
+thead tr {
+  background-color: #34495e !important;
+  color: #ffffff !important;
+}
+
+thead tr * {
+  color: #ffffff !important;
+}
+
+/* Cards y contenedores */
+.card, .form-container {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+}
+
+/* Forzar propiedades de fuente consistentes */
+* {
+  font-optical-sizing: initial !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Fix específico para macOS */
+@media screen and (-webkit-min-device-pixel-ratio: 1) {
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
+  }
+}
+
+/* Fix específico para Windows */
+@media screen and (min-resolution: 1dppx) {
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  }
+}
+
+/* Asegurar contraste en elementos interactivos */
+button:hover, button:focus,
+input:hover, input:focus,
+select:hover, select:focus {
+  color: #333333 !important;
+  background-color: #f0f0f0 !important;
+}
+
+/* Botones primarios */
+button[type="submit"], .btn-primary {
+  background-color: #4CAF50 !important;
+  color: #ffffff !important;
+}
+
+/* Mensajes de error y éxito */
+.error-message {
+  color: #d32f2f !important;
+  background-color: #ffebee !important;
+}
+
+.success-message {
+  color: #2e7d32 !important;
+  background-color: #e8f5e8 !important;
+}
+
+/* Debug: agregar borde temporal para identificar elementos invisibles */
+.debug-border * {
+  border: 1px solid red !important;
+}
+
+/* Forzar visibility en todos los elementos */
+* {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
