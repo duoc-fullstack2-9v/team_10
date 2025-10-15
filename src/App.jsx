@@ -9,9 +9,11 @@ import Registro from './pages/Registro'
 import Login from './pages/Login'
 import AdminPanel from './pages/AdminPanel'
 import ReportesAdmin from './pages/ReportesAdmin'
+import TestAdmin from './pages/TestAdmin'
 import './App.css'
-import './assets/compatibility-fix.css'
-
+// Corrección inteligente para macOS (solo cuando es necesario)
+import './assets/smart-compatibility.css'
+import './assets/smart-theme.js'
 
 function Nosotros() {
   return (
@@ -89,6 +91,11 @@ function App() {
                   <ReportesAdmin />
                 </ProtectedRoute>
               } 
+            />
+            {/* Ruta de prueba para debug */}
+            <Route 
+              path="/test-admin" 
+              element={<TestAdmin />} 
             />
           </Routes>
           <Footer />

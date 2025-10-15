@@ -58,7 +58,7 @@ function Login() {
   const authenticateUser = async (email, password) => {
     try {
       // Obtener todos los usuarios de la API a través del proxy
-      const response = await fetch('/api/usuarios');
+      const response = await fetch('http://localhost:8081/api/usuarios');
       
       if (!response.ok) {
         throw new Error('Error al conectar con el servidor');
@@ -106,6 +106,9 @@ function Login() {
           direccion: user.direccion,
           telefono: user.telefono
         };
+        
+        console.log('Login - User found:', user);
+        console.log('Login - UserData to save:', userData);
         
         login(userData);
         
