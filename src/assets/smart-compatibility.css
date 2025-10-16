@@ -1,0 +1,23 @@
+/* ===== CORRECCIÓN INTELIGENTE PARA macOS ===== */
+/* Solo se activa cuando es necesario */
+
+.macos-font-fix {
+  color-scheme: light !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+.macos-font-fix body {
+  color: #333333 !important;
+  background-color: #F7F7F7 !important;
+}
+
+.macos-font-fix button {
+  background-color: #2E8B57 !important;
+  color: #ffffff !important;
+  border: 1px solid #2E8B57 !important;
+}
+
+.macos-font-fix button:hover {
+  background-color: #236B43 !important;
+}

@@ -101,8 +101,39 @@ function Registro() {
     return newErrors;
   };
 
+  // Estados adicionales para el registro
+  const [isLoading, setIsLoading] = useState(false);
+  const [registroExitoso, setRegistroExitoso] = useState(false);
+
+  // Función para enviar usuario a la API
+  const crearUsuario = async (userData) => {
+    try {
+      const response = await fetch('/api/usuarios', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData)
+      });
+
+      const result = await response.text();
+      
+      if (response.ok) {
+        return { success: true, message: result };
+      } else {
+        return { success: false, message: result || 'Error al crear usuario' };
+      }
+    } catch (error) {
+      console.error('Error al crear usuario:', error);
+      return { 
+        success: false, 
+        message: 'No se pudo conectar con el servidor. Verifica que la API esté funcionando.' 
+      };
+    }
+  };
+
   // Manejar envío del formulario
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     const newErrors = validateForm();
@@ -112,27 +143,89 @@ function Registro() {
       return;
     }
 
-    // Aquí iría la lógica de envío al servidor
-    alert('¡Registro exitoso! (En una app real, aquí se enviarían los datos al servidor)');
-    console.log('Datos del formulario:', formData);
-    
-    // Resetear formulario
-    setFormData({
-      nombre: '',
-      correo: '',
-      password: '',
-      confirmar: '',
-      telefono: '',
-      region: '',
-      comuna: ''
-    });
+    setIsLoading(true);
     setErrors({});
+
+    // Preparar datos para la API (formato del modelo Usuario)
+    const userData = {
+      nombre: formData.nombre,
+      email: formData.correo,
+      password: formData.password,
+      fechaRegistro: new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD
+      direccion: `${formData.comuna}, ${formData.region}`, // Combinamos comuna y región
+      telefono: parseInt(formData.telefono),
+      idComuna: 1, // Por defecto, en una app real buscarías el ID real
+      idTipoUsuario: 3 // 3 = Cliente (según los datos que vimos)
+    };
+
+    try {
+      const result = await crearUsuario(userData);
+      
+      if (result.success) {
+        setRegistroExitoso(true);
+        alert('¡Registro exitoso! Usuario creado correctamente en la base de datos.');
+        
+        // Resetear formulario
+        setFormData({
+          nombre: '',
+          correo: '',
+          password: '',
+          confirmar: '',
+          telefono: '',
+          region: '',
+          comuna: ''
+        });
+      } else {
+        // Manejar errores específicos del servidor
+        if (result.message.includes('email')) {
+          setErrors({ correo: 'Este email ya está registrado' });
+        } else {
+          setErrors({ general: result.message });
+        }
+      }
+    } catch (error) {
+      setErrors({ general: 'Error inesperado. Inténtalo nuevamente.' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <main>
       <form onSubmit={handleSubmit}>
         <h2>Registro de Usuario</h2>
+        
+        {/* Mensaje de error general */}
+        {errors.general && (
+          <div className="error-message" style={{ 
+            background: '#fee', 
+            border: '1px solid #fcc', 
+            color: '#c66', 
+            padding: '10px', 
+            borderRadius: '4px', 
+            marginBottom: '20px',
+            display: 'block',
+            width: '100%'
+          }}>
+            {errors.general}
+          </div>
+        )}
+        
+        {/* Mensaje de éxito */}
+        {registroExitoso && (
+          <div className="success-message" style={{ 
+            background: '#efe', 
+            border: '1px solid #cfc', 
+            color: '#6c6', 
+            padding: '10px', 
+            borderRadius: '4px', 
+            marginBottom: '20px',
+            display: 'block',
+            width: '100%'
+          }}>
+            ¡Usuario registrado correctamente en la base de datos!
+          </div>
+        )}
         
         <label htmlFor="nombre">Nombre Completo:</label>
         <input
@@ -229,7 +322,9 @@ function Registro() {
         </select>
         {errors.comuna && <span className="error-message">{errors.comuna}</span>}
 
-        <button type="submit">Registrar</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Registrando...' : 'Registrar'}
+        </button>
       </form>
     </main>
   );
