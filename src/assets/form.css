@@ -105,3 +105,97 @@ form select.error {
         font-size: 0.75rem;
     }
 }
+
+/* Estilos específicos para Login */
+.login-error {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border-left: 4px solid #c62828;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.register-link {
+    color: #1976d2;
+    text-decoration: underline;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+.register-link:hover {
+    color: #0d47a1;
+}
+
+.form-links {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.form-links p {
+    margin: 0;
+    color: #666;
+}
+
+.form-links a {
+    color: #4CAF50;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.form-links a:hover {
+    text-decoration: underline;
+}
+
+/* Usuarios de prueba */
+.demo-credentials {
+    max-width: 350px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #f0f8ff;
+    border-radius: 12px;
+    border: 1px solid #bbdefb;
+}
+
+.demo-credentials h3 {
+    margin: 0 0 15px 0;
+    color: #1976d2;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.credential-item {
+    background: #fff;
+    padding: 8px 12px;
+    margin: 8px 0;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    border-left: 3px solid #2196f3;
+}
+
+.credential-item strong {
+    color: #1976d2;
+}
+
+/* Estado de carga del botón */
+form button[type="submit"]:disabled {
+    background: #a5d6a7;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Responsive para demo credentials */
+@media (max-width: 500px) {
+    .demo-credentials {
+        margin: 15px auto;
+        padding: 15px;
+    }
+    
+    .credential-item {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+}
