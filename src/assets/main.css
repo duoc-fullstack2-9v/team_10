@@ -648,6 +648,20 @@ p {
 }
 .categoria-card:hover {
     transform: translateY(-4px) scale(1.04);
+
+/* Estilos para página de producto individual (minimalista) */
+.view-product-button:hover {
+    background-color: #4caf50 !important;
+    color: white !important;
+}
+
+@media (max-width: 768px) {
+    .product-card .view-product-button,
+    .product-card .add-to-cart-button {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+}
     box-shadow: 0 4px 18px rgba(46,139,87,0.13);
     border-color: var(--accent);
 }

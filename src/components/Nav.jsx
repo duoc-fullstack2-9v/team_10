@@ -1,6 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
+ 
+ import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import NavLink from './NavLink';
 import '../assets/main.css';
 import huertoLogo from '../assets/img/huerto_logo.png';
 import carroImg from '../assets/img/carro.png';
@@ -14,9 +16,8 @@ function Nav() {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Función para verificar si el enlace está activo
-  const isActiveLink = (path) => {
-    return location.pathname === path;
+  const handleLinkClick = () => {
+    setIsMenuOpen(false);
   };
 
   return (
@@ -43,51 +44,25 @@ function Nav() {
         {/* Menú de navegación */}
         <div className={`navbar-menu ${isMenuOpen ? 'active' : ''}`}>
           <ul className="nav-links">
-            <li>
-              <Link 
-                to="/" 
-                className={isActiveLink('/') ? 'nav-link-active' : ''}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/productos" 
-                className={isActiveLink('/productos') ? 'nav-link-active' : ''}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Productos
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/nosotros" 
-                className={isActiveLink('/nosotros') ? 'nav-link-active' : ''}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Nosotros
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/blogs" 
-                className={isActiveLink('/blogs') ? 'nav-link-active' : ''}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Blogs
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/contacto" 
-                className={isActiveLink('/contacto') ? 'nav-link-active' : ''}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Contacto
-              </Link>
-            </li>
+            <NavLink to="/" onClick={handleLinkClick}>
+              Home
+            </NavLink>
+            
+            <NavLink to="/productos" onClick={handleLinkClick}>
+              Productos
+            </NavLink>
+            
+            <NavLink to="/nosotros" onClick={handleLinkClick}>
+              Nosotros
+            </NavLink>
+            
+            <NavLink to="/blogs" onClick={handleLinkClick}>
+              Blogs
+            </NavLink>
+            
+            <NavLink to="/contacto" onClick={handleLinkClick}>
+              Contacto
+            </NavLink>
           </ul>
           
           <div className="navbar-actions">
