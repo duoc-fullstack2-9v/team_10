@@ -1,35 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Main from '../components/Main';
-import huertoLogo from '../assets/img/huerto_logo.png';
+import LogoAnimation from '../components/LogoAnimation';
 import './Home.css';
 
 function Home() {
   const [showAnimation, setShowAnimation] = useState(true);
 
-  useEffect(() => {
-    // Ocultar la animación después de 3.5 segundos
-    const timer = setTimeout(() => {
-      setShowAnimation(false);
-    }, 3500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
+  const handleAnimationComplete = () => {setShowAnimation(false);};
+ 
   return (
     <>
       {showAnimation && (
-        <div className="logo-animation-overlay">
-          <div className="logo-animation-container">
-            <img 
-              src={huertoLogo} 
-              alt="Huerto Hogar Logo" 
-              className="logo-animation"
-            />
-            <h2 className="logo-text-animation">Huerto Hogar</h2>
-          </div>
-        </div>
+        <LogoAnimation 
+          onAnimationComplete={handleAnimationComplete}
+          duration={2000} // 2 segundos
+        />
       )}
       <div className={`main-content ${showAnimation ? 'hidden' : 'visible'}`}>
+        
         <Main />
       </div>
     </>

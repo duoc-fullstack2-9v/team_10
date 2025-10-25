@@ -25,7 +25,35 @@ export default defineConfig({
     setupFiles: "./tests/setup.js",
     coverage: {
       provider: "v8",
-      reporter: ["text", "html"],
+      reporter: ["text", "html", "json", "html-spa"],
+      reportOnFailure: true,
+      all: true,
+      include: [
+        "src/components/**/*.{js,jsx}",
+        "src/pages/**/*.{js,jsx}"
+      ],
+      exclude: [
+        "src/main.jsx",
+        "src/**/*.test.{js,jsx}",
+        "src/**/*.spec.{js,jsx}",
+        "src/assets/**",
+        "src/contexts/**",
+        "src/pages/AdminPanel.jsx",
+        "src/pages/ReportesAdmin.jsx",
+        "**/node_modules/**"
+      ],
+      thresholds: {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80
+        }
+      }
     },
+    // Configuración para reportes HTML personalizados
+    outputFile: {
+      html: './test-results/test-report.html'
+    }
   },
 })

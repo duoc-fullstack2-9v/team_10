@@ -9,8 +9,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "test:coverage": "vitest --coverage",
-    "test:ui": "vitest --ui"
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:html": "vitest run --coverage && start coverage/index.html",
+    "test:watch": "vitest --watch",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "react": "^19.1.1",

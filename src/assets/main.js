@@ -1,14 +1,3 @@
-function cambiarTitulo() {
-    let titulo = document.getElementById("titulo");
-
-    if(titulo.classList.contains("rojo")) {
-        titulo.classList.remove("rojo");
-    } else {
-        titulo.classList.add("rojo");
-    }
-}
-
-
 function validarFormulario(e) {
     e.preventDefault();
 

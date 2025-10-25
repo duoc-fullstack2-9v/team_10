@@ -199,6 +199,7 @@ function Productos() {
           {productosFiltrados.map(producto => (
             <ProductCard
               key={producto.id}
+              id={producto.id}
               image={producto.imagen}
               name={producto.nombre}
               price={producto.precio}
