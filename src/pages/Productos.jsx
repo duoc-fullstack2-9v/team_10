@@ -3,121 +3,47 @@ import '../assets/main.css';
 import ProductCard from '../components/ProductCard';
 import CategoryCard from '../components/CategoryCard';
 import CategoryDescription from '../components/CategoryDescription';
-
-import manzanaImg from '../assets/img/prod/manzana-funji.png';
-import naranjasImg from '../assets/img/prod/naranjas-valencia.png';
-import platanosImg from '../assets/img/prod/platanos-cavendish.png';
-import zanahoriasImg from '../assets/img/prod/zanahorias-organicas.png';
-import espinacasImg from '../assets/img/prod/espinacas-frescas.png';
-import pimientosImg from '../assets/img/prod/pimientos-tricolores.png';
-import mielImg from '../assets/img/prod/miel-organica.png';
-import quinoaImg from '../assets/img/quinoa.jpg';
-import lecheImg from '../assets/img/leche.jpg';
+import { useProductos } from '../hooks/useProductos';
 
 function Productos() {
   const [filtroCategoria, setFiltroCategoria] = useState('todas');
+  const { productos: productosAPI, loading, error, filtrarPorCategoria, cargarProductos } = useProductos();
 
 
-  const productos = [
-    {
-      id: 1,
-      nombre: "Manzanas Fuji",
-      precio: "$1,200 CLP por kilo",
-      stock: "150 kilos",
-      descripcion: "Manzanas Fuji crujientes y dulces, cultivadas en el Valle del Maule.",
-      imagen: manzanaImg,
-      categoria: "frutas",
-      alt: "Manzanas Fuji"
-    },
-    {
-      id: 2,
-      nombre: "Naranjas Valencia",
-      precio: "$1,000 CLP por kilo",
-      stock: "200 kilos",
-      descripcion: "Jugosas y ricas en vitamina C, ideales para zumos frescos.",
-      imagen: naranjasImg,
-      categoria: "frutas",
-      alt: "Naranjas Valencia"
-    },
-    {
-      id: 3,
-      nombre: "Plátanos Cavendish",
-      precio: "$800 CLP por kilo",
-      stock: "250 kilos",
-      descripcion: "Plátanos maduros y dulces, perfectos para el desayuno.",
-      imagen: platanosImg,
-      categoria: "frutas",
-      alt: "Plátanos Cavendish"
-    },
-    {
-      id: 4,
-      nombre: "Zanahorias Orgánicas",
-      precio: "$900 CLP por kilo",
-      stock: "100 kilos",
-      descripcion: "Zanahorias crujientes cultivadas sin pesticidas.",
-      imagen: zanahoriasImg,
-      categoria: "verduras",
-      alt: "Zanahorias Orgánicas"
-    },
-    {
-      id: 5,
-      nombre: "Espinacas Frescas",
-      precio: "$700 CLP por bolsa de 500g",
-      stock: "80 bolsas",
-      descripcion: "Espinacas frescas y nutritivas, perfectas para ensaladas.",
-      imagen: espinacasImg,
-      categoria: "verduras",
-      alt: "Espinacas Frescas"
-    },
-    {
-      id: 6,
-      nombre: "Pimientos Tricolores",
-      precio: "$1,500 CLP por kilo",
-      stock: "120 kilos",
-      descripcion: "Pimientos rojos, amarillos y verdes, ideales para salteados.",
-      imagen: pimientosImg,
-      categoria: "verduras",
-      alt: "Pimientos Tricolores"
-    },
-    {
-      id: 7,
-      nombre: "Miel Orgánica",
-      precio: "$5,000 CLP por frasco de 500g",
-      stock: "50 frascos",
-      descripcion: "Miel pura y orgánica producida por apicultores locales.",
-      imagen: mielImg,
-      categoria: "organicos",
-      alt: "Miel Orgánica"
-    },
-    {
-      id: 8,
-      nombre: "Quinua Orgánica",
-      precio: "$3,500 CLP por bolsa de 500g",
-      stock: "60 bolsas",
-      descripcion: "Quinua orgánica de alto valor nutricional.",
-      imagen: quinoaImg,
-      categoria: "organicos",
-      alt: "Quinua Orgánica"
-    },
-    {
-      id: 9,
-      nombre: "Leche Entera",
-      precio: "$1,200 CLP por litro",
-      stock: "100 litros",
-      descripcion: "Leche entera fresca proveniente de granjas locales.",
-      imagen: lecheImg,
-      categoria: "lacteos",
-      alt: "Leche Entera"
-    }
-  ];
+  // Mapear categorías de la API a las del filtro
+  const mapearCategoriaFiltro = (categoriaAPI) => {
+    const mapeo = {
+      'Frutas': 'frutas',
+      'Verduras': 'verduras',
+      'Otros': 'organicos',
+      'Hierbas': 'organicos'
+    };
+    return mapeo[categoriaAPI] || 'organicos';
+  };
 
-
+  // Filtrar productos de la API
   const productosFiltrados = filtroCategoria === 'todas' 
-    ? productos 
-    : productos.filter(producto => producto.categoria === filtroCategoria);
+    ? productosAPI 
+    : productosAPI.filter(producto => 
+        mapearCategoriaFiltro(producto.categoria) === filtroCategoria
+      );
 
   const handleFiltroChange = (event) => {
-    setFiltroCategoria(event.target.value);
+    const categoria = event.target.value;
+    setFiltroCategoria(categoria);
+    
+    // Si selecciona una categoría específica, usar el filtro de la API
+    if (categoria !== 'todas') {
+      if (categoria === 'frutas') {
+        filtrarPorCategoria('Frutas');
+      } else if (categoria === 'verduras') {
+        filtrarPorCategoria('Verduras');
+      } else {
+        cargarProductos(); // Cargar todos y filtrar localmente
+      }
+    } else {
+      cargarProductos();
+    }
   };
 
   // Datos de categorías
@@ -195,21 +121,41 @@ function Productos() {
             <option value="lacteos">Productos Lácteos</option>
           </select>
         </div>
-        <div className="product-grid">
-          {productosFiltrados.map(producto => (
-            <ProductCard
-              key={producto.id}
-              image={producto.imagen}
-              name={producto.nombre}
-              price={producto.precio}
-              alt={producto.alt}
-              stock={producto.stock}
-              description={producto.descripcion}
-              showStock={true}
-              showDescription={true}
-            />
-          ))}
-        </div>
+
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <p>Cargando productos...</p>
+          </div>
+        )}
+
+        {error && (
+          <div style={{ 
+            padding: '20px', 
+            backgroundColor: '#fee', 
+            color: '#c00',
+            borderRadius: '8px',
+            margin: '20px 0'
+          }}>
+            <p>❌ Error al cargar productos: {error}</p>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div className="product-grid">
+            {productosFiltrados.length === 0 ? (
+              <p style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>
+                No se encontraron productos en esta categoría
+              </p>
+            ) : (
+              productosFiltrados.map(producto => (
+                <ProductCard
+                  key={producto.idProducto}
+                  product={producto}
+                />
+              ))
+            )}
+          </div>
+        )}
       </section>
     </main>
   );

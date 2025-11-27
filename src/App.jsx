@@ -1,10 +1,14 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { CartProvider } from './contexts/CartContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Nav from './components/Nav'
 import Footer from './components/Footer'
 import Home from './pages/Home'
 import Productos from './pages/Productos'
+import ProductDetail from './pages/ProductDetail'
+import Carrito from './pages/Carrito'
+import ProductosEjemplo from './components/ProductosEjemplo'
 import Registro from './pages/Registro'
 import Login from './pages/Login'
 import AdminPanel from './pages/AdminPanel'
@@ -48,32 +52,24 @@ function Contacto() {
   )
 }
 
-function Carrito() {
-  return (
-    <main className="main">
-      <div style={{ padding: '40px 5%', textAlign: 'center' }}>
-        <h1>Carrito de Compras</h1>
-        <p>Página del carrito - En construcción</p>
-      </div>
-    </main>
-  )
-}
-
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="App">
-          <Nav />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/productos" element={<Productos />} />
-            <Route path="/nosotros" element={<Nosotros />} />
-            <Route path="/blogs" element={<Blogs />} />
-            <Route path="/contacto" element={<Contacto />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/registro" element={<Registro />} />
-            <Route path="/carrito" element={<Carrito />} />
+      <CartProvider>
+        <Router>
+          <div className="App">
+            <Nav />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/productos" element={<Productos />} />
+              <Route path="/productos/:id" element={<ProductDetail />} />
+              <Route path="/productos-ejemplo" element={<ProductosEjemplo />} />
+              <Route path="/nosotros" element={<Nosotros />} />
+              <Route path="/blogs" element={<Blogs />} />
+              <Route path="/contacto" element={<Contacto />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/registro" element={<Registro />} />
+              <Route path="/carrito" element={<Carrito />} />
             
             {/* Rutas protegidas para administradores */}
             <Route 
@@ -101,6 +97,7 @@ function App() {
           <Footer />
         </div>
       </Router>
+    </CartProvider>
     </AuthProvider>
   )
 }

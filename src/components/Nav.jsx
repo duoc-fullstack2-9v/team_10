@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
 import '../assets/main.css';
 import huertoLogo from '../assets/img/huerto_logo.png';
 import carroImg from '../assets/img/carro.png';
@@ -9,6 +10,7 @@ function Nav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { user, isAuthenticated, isAdmin, logout, getRoleName } = useAuth();
+  const { getTotalItems } = useCart();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -152,9 +154,28 @@ function Nav() {
                   Cerrar Sesión
                 </button>
                 
-                <Link to="/carrito" className="cart-link" onClick={() => setIsMenuOpen(false)}>
+                <Link to="/carrito" className="cart-link" onClick={() => setIsMenuOpen(false)} style={{ position: 'relative' }}>
                   <img src={carroImg} width="40" alt="Carrito" />
                   <span>Cart</span>
+                  {getTotalItems() > 0 && (
+                    <span style={{
+                      position: 'absolute',
+                      top: '-5px',
+                      right: '-5px',
+                      backgroundColor: '#e74c3c',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.7em',
+                      fontWeight: 'bold'
+                    }}>
+                      {getTotalItems()}
+                    </span>
+                  )}
                 </Link>
               </>
             ) : (
@@ -162,9 +183,28 @@ function Nav() {
               <>
                 <Link to="/login" onClick={() => setIsMenuOpen(false)}>Iniciar Sesión</Link>
                 <Link to="/registro" onClick={() => setIsMenuOpen(false)}>Registrar Usuario</Link>
-                <Link to="/carrito" className="cart-link" onClick={() => setIsMenuOpen(false)}>
+                <Link to="/carrito" className="cart-link" onClick={() => setIsMenuOpen(false)} style={{ position: 'relative' }}>
                   <img src={carroImg} width="40" alt="Carrito" />
                   <span>Cart</span>
+                  {getTotalItems() > 0 && (
+                    <span style={{
+                      position: 'absolute',
+                      top: '-5px',
+                      right: '-5px',
+                      backgroundColor: '#e74c3c',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.7em',
+                      fontWeight: 'bold'
+                    }}>
+                      {getTotalItems()}
+                    </span>
+                  )}
                 </Link>
               </>
             )}

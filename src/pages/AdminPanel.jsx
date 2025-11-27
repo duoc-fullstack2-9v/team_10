@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import UsuarioService from '../services/usuario.service';
+import ProductoService from '../services/producto.service';
 
 function AdminPanel() {
   const { user, isAdmin } = useAuth();
@@ -18,6 +20,7 @@ function AdminPanel() {
   const [errorUsers, setErrorUsers] = useState('');
   const [editingUser, setEditingUser] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [savingUser, setSavingUser] = useState(false);
 
   // Estados para productos
   const [products, setProducts] = useState([]);
@@ -25,6 +28,7 @@ function AdminPanel() {
   const [errorProducts, setErrorProducts] = useState('');
   const [editingProduct, setEditingProduct] = useState(null);
   const [showCreateProductForm, setShowCreateProductForm] = useState(false);
+  const [savingProduct, setSavingProduct] = useState(false);
 
   // Estados para formularios de usuarios
   const [formData, setFormData] = useState({
@@ -54,8 +58,8 @@ function AdminPanel() {
   const [categories, setCategories] = useState([
     { id: 1, nombre: 'Frutas' },
     { id: 2, nombre: 'Verduras' },
-    { id: 3, nombre: 'Productos Orgánicos' },
-    { id: 4, nombre: 'Lácteos' }
+    { id: 3, nombre: 'Otros' },
+    { id: 4, nombre: 'Hierbas' }
   ]);
 
   // Cargar usuarios y productos al montar componente
@@ -73,14 +77,8 @@ function AdminPanel() {
     console.log('loadUsers - Starting...');
     try {
       setLoadingUsers(true);
-      console.log('loadUsers - Fetching from API...');
-      const response = await fetch('http://localhost:8081/api/usuarios');
-      
-      if (!response.ok) {
-        throw new Error('Error al cargar usuarios');
-      }
-
-      const userData = await response.json();
+      console.log('loadUsers - Fetching from UsuarioService...');
+      const userData = await UsuarioService.listarUsuarios();
       console.log('loadUsers - Data received:', userData);
       setUsers(userData);
       setErrorUsers('');
@@ -99,13 +97,8 @@ function AdminPanel() {
   const loadProducts = async () => {
     try {
       setLoadingProducts(true);
-      const response = await fetch('http://localhost:8082/api/productos');
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const productData = await response.json();
+      console.log('loadProducts - Fetching from ProductoService...');
+      const productData = await ProductoService.listarProductos();
       setProducts(productData);
       setErrorProducts('');
       console.log('Productos cargados:', productData);
@@ -171,6 +164,7 @@ function AdminPanel() {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     
+    setSavingUser(true);
     try {
       const userData = {
         ...formData,
@@ -178,24 +172,14 @@ function AdminPanel() {
         fechaRegistro: new Date().toISOString().split('T')[0]
       };
 
-      const response = await fetch('/api/usuarios', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData)
-      });
-
-      if (response.ok) {
-        alert('Usuario creado exitosamente');
-        closeForm();
-        loadUsers();
-      } else {
-        const errorText = await response.text();
-        alert('Error al crear usuario: ' + errorText);
-      }
+      await UsuarioService.registrar(userData);
+      alert('Usuario creado exitosamente');
+      closeForm();
+      loadUsers();
     } catch (err) {
-      alert('Error: ' + err.message);
+      alert('Error al crear usuario: ' + err.message);
+    } finally {
+      setSavingUser(false);
     }
   };
 
@@ -203,56 +187,38 @@ function AdminPanel() {
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     
+    setSavingUser(true);
     try {
       const userData = {
         ...formData,
-        telefono: parseInt(formData.telefono),
-        idUsuario: editingUser.idUsuario
+        telefono: parseInt(formData.telefono)
       };
 
-      const response = await fetch('/api/usuarios', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData)
-      });
-
-      if (response.ok) {
-        alert('Usuario actualizado exitosamente');
-        closeForm();
-        loadUsers();
-      } else {
-        const errorText = await response.text();
-        alert('Error al actualizar usuario: ' + errorText);
-      }
+      await UsuarioService.actualizarUsuario(editingUser.id, userData);
+      alert('Usuario actualizado exitosamente');
+      closeForm();
+      loadUsers();
     } catch (err) {
-      alert('Error: ' + err.message);
+      alert('Error al actualizar usuario: ' + err.message);
+    } finally {
+      setSavingUser(false);
     }
   };
 
   // Eliminar usuario
   const handleDeleteUser = async (userId, userName) => {
-    if (userId === user.idUsuario) {
+    if (userId === user.id) {
       alert('No puedes eliminar tu propio usuario');
       return;
     }
 
     if (window.confirm(`¿Estás seguro de eliminar al usuario "${userName}"?`)) {
       try {
-        const response = await fetch(`/api/usuarios/${userId}`, {
-          method: 'DELETE'
-        });
-
-        if (response.ok) {
-          alert('Usuario eliminado exitosamente');
-          loadUsers();
-        } else {
-          const errorText = await response.text();
-          alert('Error al eliminar usuario: ' + errorText);
-        }
+        await UsuarioService.eliminarUsuario(userId);
+        alert('Usuario eliminado exitosamente');
+        loadUsers();
       } catch (err) {
-        alert('Error: ' + err.message);
+        alert('Error al eliminar usuario: ' + err.message);
       }
     }
   };
@@ -296,23 +262,24 @@ function AdminPanel() {
   const handleCreateProduct = async (e) => {
     e.preventDefault();
     
+    // Validar datos requeridos
+    if (!productFormData.idProducto || !productFormData.nombre || !productFormData.precio) {
+      alert('Por favor completa todos los campos requeridos: ID, Nombre y Precio');
+      return;
+    }
+
+    // Validar formato del ID
+    const idPattern = /^[A-Z]{2}[0-9]{3}$/;
+    if (!idPattern.test(productFormData.idProducto)) {
+      alert('El ID del producto debe seguir el formato XX000 (2 letras mayúsculas + 3 números)');
+      return;
+    }
+
+    setSavingProduct(true);
     try {
       console.log('🚀 Iniciando creación de producto...');
       console.log('📝 Datos del formulario:', productFormData);
       
-      // Validar datos requeridos
-      if (!productFormData.idProducto || !productFormData.nombre || !productFormData.precio) {
-        alert('Por favor completa todos los campos requeridos: ID, Nombre y Precio');
-        return;
-      }
-
-      // Validar formato del ID
-      const idPattern = /^[A-Z]{2}[0-9]{3}$/;
-      if (!idPattern.test(productFormData.idProducto)) {
-        alert('El ID del producto debe seguir el formato XX000 (2 letras mayúsculas + 3 números)');
-        return;
-      }
-
       const productData = {
         ...productFormData,
         precio: parseFloat(productFormData.precio) || 0,
@@ -322,30 +289,16 @@ function AdminPanel() {
 
       console.log('📦 Datos a enviar:', productData);
 
-      const response = await fetch('http://localhost:8082/api/productos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(productData)
-      });
-
-      console.log('🌐 Respuesta del servidor:', response.status);
-
-      if (response.ok) {
-        const createdProduct = await response.json();
-        console.log('✅ Producto creado:', createdProduct);
-        alert('Producto creado exitosamente: ' + createdProduct.nombre);
-        resetProductForm(); // Cerrar formulario después del éxito
-        loadProducts();
-      } else {
-        const errorText = await response.text();
-        console.error('❌ Error del servidor:', errorText);
-        alert('Error al crear producto: ' + errorText);
-      }
+      const createdProduct = await ProductoService.crearProducto(productData);
+      console.log('✅ Producto creado:', createdProduct);
+      alert('Producto creado exitosamente: ' + createdProduct.nombre);
+      resetProductForm();
+      loadProducts();
     } catch (err) {
       console.error('💥 Error en handleCreateProduct:', err);
-      alert('Error: ' + err.message);
+      alert('Error al crear producto: ' + err.message);
+    } finally {
+      setSavingProduct(false);
     }
   };
 
@@ -353,6 +306,7 @@ function AdminPanel() {
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
     
+    setSavingProduct(true);
     try {
       const productData = {
         ...productFormData,
@@ -361,24 +315,14 @@ function AdminPanel() {
         idCategoria: parseInt(productFormData.idCategoria)
       };
 
-      const response = await fetch(`http://localhost:8082/api/productos/${productData.idProducto}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(productData)
-      });
-
-      if (response.ok) {
-        alert('Producto actualizado exitosamente');
-        closeProductForm();
-        loadProducts();
-      } else {
-        const errorText = await response.text();
-        alert('Error al actualizar producto: ' + errorText);
-      }
+      await ProductoService.actualizarProducto(productData.idProducto, productData);
+      alert('Producto actualizado exitosamente');
+      closeProductForm();
+      loadProducts();
     } catch (err) {
-      alert('Error: ' + err.message);
+      alert('Error al actualizar producto: ' + err.message);
+    } finally {
+      setSavingProduct(false);
     }
   };
 
@@ -386,19 +330,11 @@ function AdminPanel() {
   const handleDeleteProduct = async (productId, productName) => {
     if (window.confirm(`¿Estás seguro de eliminar el producto "${productName}"?`)) {
       try {
-        const response = await fetch(`http://localhost:8082/api/productos/${productId}`, {
-          method: 'DELETE'
-        });
-
-        if (response.ok) {
-          alert('Producto eliminado exitosamente');
-          loadProducts();
-        } else {
-          const errorText = await response.text();
-          alert('Error al eliminar producto: ' + errorText);
-        }
+        await ProductoService.eliminarProducto(productId);
+        alert('Producto eliminado exitosamente');
+        loadProducts();
       } catch (err) {
-        alert('Error: ' + err.message);
+        alert('Error al eliminar producto: ' + err.message);
       }
     }
   };
@@ -486,7 +422,14 @@ function AdminPanel() {
   });
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+    <>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+      <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
       <div style={{ marginBottom: '30px', borderBottom: '2px solid #2c3e50', paddingBottom: '10px' }}>
         <h1 style={{ color: '#2c3e50', margin: 0 }}>Panel de Administración</h1>
         <p style={{ color: '#7f8c8d', margin: '5px 0' }}>
@@ -683,28 +626,46 @@ function AdminPanel() {
             <div style={{ marginTop: '15px' }}>
               <button 
                 type="submit"
+                disabled={savingUser}
                 style={{ 
                   padding: '10px 20px', 
-                  backgroundColor: '#27ae60', 
+                  backgroundColor: savingUser ? '#95a5a6' : '#27ae60', 
                   color: 'white', 
                   border: 'none', 
                   borderRadius: '4px',
-                  cursor: 'pointer',
-                  marginRight: '10px'
+                  cursor: savingUser ? 'not-allowed' : 'pointer',
+                  marginRight: '10px',
+                  opacity: savingUser ? 0.7 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
                 }}
               >
-                {editingUser ? 'Actualizar' : 'Crear'} Usuario
+                {savingUser && (
+                  <span style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid white',
+                    borderTopColor: 'transparent',
+                    borderRadius: '50%',
+                    animation: 'spin 0.8s linear infinite',
+                    display: 'inline-block'
+                  }}></span>
+                )}
+                {savingUser ? 'Guardando...' : (editingUser ? 'Actualizar' : 'Crear') + ' Usuario'}
               </button>
               <button 
                 type="button"
                 onClick={closeForm}
+                disabled={savingUser}
                 style={{ 
                   padding: '10px 20px', 
                   backgroundColor: '#95a5a6', 
                   color: 'white', 
                   border: 'none', 
                   borderRadius: '4px',
-                  cursor: 'pointer'
+                  cursor: savingUser ? 'not-allowed' : 'pointer',
+                  opacity: savingUser ? 0.5 : 1
                 }}
               >
                 Cancelar
@@ -738,8 +699,8 @@ function AdminPanel() {
               </thead>
               <tbody>
                 {users.map((userData) => (
-                  <tr key={userData.idUsuario} style={{ borderBottom: '1px solid #ddd' }}>
-                    <td style={{ padding: '12px', border: '1px solid #ddd' }}>{userData.idUsuario}</td>
+                  <tr key={userData.id} style={{ borderBottom: '1px solid #ddd' }}>
+                    <td style={{ padding: '12px', border: '1px solid #ddd' }}>{userData.id}</td>
                     <td style={{ padding: '12px', border: '1px solid #ddd' }}>{userData.nombre}</td>
                     <td style={{ padding: '12px', border: '1px solid #ddd' }}>{userData.email}</td>
                     <td style={{ padding: '12px', border: '1px solid #ddd' }}>
@@ -772,7 +733,7 @@ function AdminPanel() {
                         ✏️ Editar
                       </button>
                       <button
-                        onClick={() => handleDeleteUser(userData.idUsuario, userData.nombre)}
+                        onClick={() => handleDeleteUser(userData.id, userData.nombre)}
                         style={{ 
                           padding: '5px 10px', 
                           backgroundColor: '#e74c3c', 
@@ -1003,29 +964,47 @@ function AdminPanel() {
                 <div style={{ marginTop: '15px' }}>
                   <button 
                     type="submit"
+                    disabled={savingProduct}
                     onClick={() => console.log('🔴 Botón Submit clickeado - editingProduct:', editingProduct)}
                     style={{ 
                       padding: '10px 20px', 
-                      backgroundColor: '#27ae60', 
+                      backgroundColor: savingProduct ? '#95a5a6' : '#27ae60', 
                       color: 'white', 
                       border: 'none', 
                       borderRadius: '4px',
-                      cursor: 'pointer',
-                      marginRight: '10px'
+                      cursor: savingProduct ? 'not-allowed' : 'pointer',
+                      marginRight: '10px',
+                      opacity: savingProduct ? 0.7 : 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
                     }}
                   >
-                    {editingProduct ? 'Actualizar' : 'Crear'} Producto
+                    {savingProduct && (
+                      <span style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid white',
+                        borderTopColor: 'transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                        display: 'inline-block'
+                      }}></span>
+                    )}
+                    {savingProduct ? 'Guardando...' : (editingProduct ? 'Actualizar' : 'Crear') + ' Producto'}
                   </button>
                   <button 
                     type="button"
                     onClick={closeProductForm}
+                    disabled={savingProduct}
                     style={{ 
                       padding: '10px 20px', 
                       backgroundColor: '#95a5a6', 
                       color: 'white', 
                       border: 'none', 
                       borderRadius: '4px',
-                      cursor: 'pointer'
+                      cursor: savingProduct ? 'not-allowed' : 'pointer',
+                      opacity: savingProduct ? 0.5 : 1
                     }}
                   >
                     Cancelar
@@ -1093,10 +1072,10 @@ function AdminPanel() {
                             padding: '4px 8px', 
                             borderRadius: '4px', 
                             color: 'white',
-                            backgroundColor: product.estaActivo === 'Y' ? '#27ae60' : '#e74c3c',
+                            backgroundColor: product.estaActivo ? '#27ae60' : '#e74c3c',
                             fontSize: '0.8em'
                           }}>
-                            {product.estaActivo === 'Y' ? 'Activo' : 'Inactivo'}
+                            {product.estaActivo ? 'Activo' : 'Inactivo'}
                           </span>
                         </td>
                         <td style={{ padding: '12px', border: '1px solid #ddd' }}>
@@ -1154,6 +1133,7 @@ function AdminPanel() {
         </div>
       )}
     </div>
+    </>
   );
 }
 

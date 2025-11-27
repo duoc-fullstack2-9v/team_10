@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import ProductCard from './ProductCard';
+import ProductoService from '../services/producto.service';
 import espinacasImg from '../assets/img/prod/espinacas-frescas.png';
 import manzanaImg from '../assets/img/prod/manzana-funji.png';
 import mielImg from '../assets/img/prod/miel-organica.png';
@@ -10,6 +12,25 @@ function FeaturedProducts({
   title = "Productos destacados",
   products = null 
 }) {
+  const [productosAPI, setProductosAPI] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    cargarProductos();
+  }, []);
+
+  const cargarProductos = async () => {
+    try {
+      setLoading(true);
+      const productos = await ProductoService.listarProductos();
+      // Tomar solo los primeros 6 productos
+      setProductosAPI(productos.slice(0, 6));
+    } catch (error) {
+      console.error('Error cargando productos destacados:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   // Productos por defecto si no se pasan props
   const defaultProducts = [
     {
@@ -56,22 +77,31 @@ function FeaturedProducts({
     }
   ];
 
-  const productsToShow = products || defaultProducts;
+  // Si se pasan products por props, usarlos; si no, usar productos de API; fallback a productos por defecto
+  const productsToShow = products || (productosAPI.length > 0 ? productosAPI : defaultProducts);
 
   return (
     <section>
       <div className="catalogo">
         <h2 className="catalogo-title">{title}</h2>
+        
+        {loading && !products && (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <p>Cargando productos destacados...</p>
+          </div>
+        )}
+        
         <div className="product-grid">
           {productsToShow.map(product => (
             <ProductCard
-              key={product.id}
+              key={product.idProducto || product.id}
+              product={product.idProducto ? product : null}
               image={product.image}
-              name={product.name}
-              price={product.price}
-              alt={product.alt}
+              name={product.name || product.nombre}
+              price={product.price || `$${product.precio} CLP`}
+              alt={product.alt || product.nombre}
               stock={product.stock}
-              description={product.description}
+              description={product.description || product.descripcion}
               showStock={product.showStock}
               showDescription={product.showDescription}
             />

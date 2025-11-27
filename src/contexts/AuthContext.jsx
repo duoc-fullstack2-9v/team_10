@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import UsuarioService from '../services/usuario.service';
 
 const AuthContext = createContext();
 
@@ -17,20 +18,52 @@ export const AuthProvider = ({ children }) => {
   // Cargar usuario desde localStorage al iniciar
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
-    if (savedUser) {
+    const token = localStorage.getItem('token');
+    
+    if (savedUser && token) {
       setUser(JSON.parse(savedUser));
     }
     setLoading(false);
   }, []);
 
-  const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+  /**
+   * Login usando el servicio de usuarios
+   * @param {string} email - Email del usuario
+   * @param {string} password - Contraseña del usuario
+   * @returns {Promise<{success: boolean, message: string, user?: object}>}
+   */
+  const login = async (email, password) => {
+    try {
+      const response = await UsuarioService.login({ email, password });
+      
+      if (response.usuario && response.token) {
+        setUser(response.usuario);
+        localStorage.setItem('user', JSON.stringify(response.usuario));
+        // El token ya se guarda automáticamente en usuario.service.js
+        
+        return { 
+          success: true, 
+          message: 'Login exitoso',
+          user: response.usuario 
+        };
+      }
+      
+      return { 
+        success: false, 
+        message: 'Credenciales inválidas' 
+      };
+    } catch (error) {
+      console.error('Error en login:', error);
+      return { 
+        success: false, 
+        message: error.message || 'Error al iniciar sesión. Verifica tus credenciales.' 
+      };
+    }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    UsuarioService.logout();
   };
 
   // Funciones para verificar roles

@@ -8,14 +8,16 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/productos': {
-        target: 'http://localhost:8082',
+        target: 'http://34.202.46.121:8081',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/productos/, '/api/productos')
       },
-      '/api': {
-        target: 'http://localhost:8081',
+      '/api/usuarios': {
+        target: 'http://34.193.190.24:8081',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/usuarios/, '/api/usuarios')
       }
     }
   },

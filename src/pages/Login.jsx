@@ -54,31 +54,6 @@ function Login() {
     return newErrors;
   };
 
-  // Función para autenticar usuario
-  const authenticateUser = async (email, password) => {
-    try {
-      // Obtener todos los usuarios de la API a través del proxy
-      const response = await fetch('http://localhost:8081/api/usuarios');
-      
-      if (!response.ok) {
-        throw new Error('Error al conectar con el servidor');
-      }
-
-      const users = await response.json();
-      
-      // Buscar usuario con email y password coincidentes
-      const user = users.find(u => 
-        u.email.toLowerCase() === email.toLowerCase() && 
-        u.password === password
-      );
-
-      return user || null;
-    } catch (error) {
-      console.error('Error de autenticación:', error);
-      throw new Error('No se pudo conectar con el servidor. Verifica que la API esté funcionando.');
-    }
-  };
-
   // Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -94,44 +69,29 @@ function Login() {
     setLoginError('');
 
     try {
-      const user = await authenticateUser(formData.email, formData.password);
+      // Usar el login del contexto que ahora usa UsuarioService
+      const result = await login(formData.email, formData.password);
       
-      if (user) {
-        // Login exitoso - usar contexto de autenticación
-        const userData = {
-          idUsuario: user.idUsuario,
-          nombre: user.nombre,
-          email: user.email,
-          idTipoUsuario: user.idTipoUsuario,
-          direccion: user.direccion,
-          telefono: user.telefono
-        };
-        
-        console.log('Login - User found:', user);
-        console.log('Login - UserData to save:', userData);
-        
-        login(userData);
+      if (result.success) {
+        const user = result.user;
         
         // Redirigir según el tipo de usuario
         if (user.idTipoUsuario === 1) {
           // Administrador -> Panel de admin
-          alert(`¡Bienvenido Administrador ${user.nombre}!`);
           navigate('/admin');
         } else if (user.idTipoUsuario === 2) {
-          // Vendedor -> Panel de vendedor (por ahora home)
-          alert(`¡Bienvenido Vendedor ${user.nombre}!`);
+          // Vendedor -> Home
           navigate('/');
         } else {
           // Cliente -> Home
-          alert(`¡Bienvenido ${user.nombre}!`);
           navigate('/');
         }
       } else {
-        // Credenciales incorrectas
-        setLoginError('Email o contraseña incorrectos. ¿No tienes cuenta?');
+        setLoginError(result.message || 'Email o contraseña incorrectos');
       }
     } catch (error) {
-      setLoginError(error.message);
+      setLoginError('Error al iniciar sesión. Por favor, intenta nuevamente.');
+      console.error('Error en login:', error);
     } finally {
       setIsLoading(false);
     }
