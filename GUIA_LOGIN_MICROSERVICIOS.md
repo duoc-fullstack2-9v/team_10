@@ -12,20 +12,20 @@ Este proyecto es un **frontend React** que se conecta a **microservicios indepen
 
 ### Archivo Actualizado: `src/services/usuario.service.js`
 
-El servicio de login ahora usa el endpoint `/api/usuarios/login` de tu microservicio que implementa BCrypt.
+El servicio de login ahora usa el endpoint `/api/login` del microservicio que implementa validación con BCrypt.
 
 **Antes** (inseguro):
 ```javascript
 // Hacía GET a /api/usuarios y buscaba usuario con password en texto plano
 const url = `${API_CONFIG.USUARIO.BASE_URL}/api/usuarios`;
-// ... compara password directamente
+// ... compara password directamente en el cliente
 ```
 
 **Ahora** (seguro con BCrypt):
 ```javascript
-// Hace POST a /api/usuarios/login con encriptación BCrypt
-const url = `${API_CONFIG.USUARIO.BASE_URL}/api/usuarios/login`;
-// El microservicio valida con BCrypt
+// Hace POST a /api/login con validación BCrypt en servidor
+const url = `${API_CONFIG.USUARIO.BASE_URL}/api/login`;
+// El microservicio valida con BCrypt de forma segura
 ```
 
 ## 🎯 Cómo Funciona
@@ -44,7 +44,7 @@ const handleSubmit = async (e) => {
 
 ```javascript
 // usuario.service.js
-POST http://34.193.190.24:8081/api/usuarios/login
+POST http://34.193.190.24:8081/api/login
 Body: {
   "email": "usuario@example.com",
   "password": "password123"
@@ -183,7 +183,7 @@ team_10/  (Frontend React)
 
 - **URL Base**: `http://34.193.190.24:8081`
 - **Endpoints**:
-  - `POST /api/usuarios/login` - Login con BCrypt ✅
+  - `POST /api/login` - Login con BCrypt ✅
   - `GET /api/usuarios` - Listar usuarios
   - `POST /api/usuarios` - Crear usuario
   - `PUT /api/usuarios` - Actualizar usuario
@@ -206,13 +206,13 @@ team_10/  (Frontend React)
 ✅ **CORS habilitado** - Permite peticiones desde el frontend  
 ✅ **Mensajes genéricos** de error para no revelar información  
 
-## ✨ Próximos Pasos Sugeridos
+## ✨ Mejoras Futuras Sugeridas
 
-1. **Implementar JWT en el microservicio**: Reemplazar el token simple por JWT
-2. **Refresh Tokens**: Para mantener sesiones activas
-3. **Rate Limiting**: Limitar intentos de login
-4. **2FA**: Autenticación de dos factores
-5. **Logs centralizados**: Monitorear accesos y errores
+1. **Rate Limiting**: Limitar intentos de login para prevenir ataques de fuerza bruta
+2. **Refresh Tokens**: Para mantener sesiones activas de forma segura
+3. **2FA**: Autenticación de dos factores opcional
+4. **Logs centralizados**: Monitorear accesos y errores en tiempo real
+5. **Notificaciones de seguridad**: Alertar sobre accesos sospechosos
 
 ## 🎯 Checklist de Verificación
 

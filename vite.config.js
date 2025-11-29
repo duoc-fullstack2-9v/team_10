@@ -7,6 +7,12 @@ export default defineConfig({
   base: "./",
   server: {
     proxy: {
+      '/api/login': {
+        target: 'http://34.193.190.24:8081',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/login/, '/api/login')
+      },
       '/api/productos': {
         target: 'http://34.202.46.121:8081',
         changeOrigin: true,

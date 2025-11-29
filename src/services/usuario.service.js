@@ -8,7 +8,7 @@ const UsuarioService = {
   /**
    * Iniciar sesión usando el endpoint de login del microservicio con BCrypt
    * @param {Object} credentials - { email, password }
-   * @returns {Promise} Datos del usuario y token
+   * @returns {Promise} Datos del usuario autenticado
    */
   async login(credentials) {
     try {
@@ -54,7 +54,18 @@ const UsuarioService = {
         throw new Error(errorMessage);
       }
 
-      const usuario = responseData.usuario;
+      // El microservicio devuelve los datos del usuario directamente en responseData
+      const usuario = {
+        idUsuario: responseData.id,
+        nombre: responseData.nombre,
+        email: responseData.email,
+        fechaRegistro: responseData.fechaRegistro,
+        direccion: responseData.direccion,
+        telefono: responseData.telefono,
+        idComuna: responseData.idComuna,
+        idTipoUsuario: responseData.idTipoUsuario
+      };
+      
       console.log('✅ Usuario autenticado:', { 
         id: usuario.idUsuario, 
         nombre: usuario.nombre, 
@@ -62,18 +73,13 @@ const UsuarioService = {
         rol: usuario.idTipoUsuario 
       });
 
-      // Generar un token simple (tu microservicio puede devolver un JWT en el futuro)
-      const token = btoa(`${usuario.email}:${Date.now()}`);
-      
-      // Guardar token y usuario en localStorage
-      localStorage.setItem('token', token);
+      // Guardar usuario en localStorage para mantener sesión
       localStorage.setItem('user', JSON.stringify(usuario));
       
-      console.log('💾 Token y usuario guardados en localStorage');
+      console.log('💾 Usuario guardado en localStorage');
       
       return {
-        usuario: usuario,
-        token: token
+        usuario: usuario
       };
     } catch (error) {
       console.error('💥 Error en login:', error);
@@ -169,26 +175,9 @@ const UsuarioService = {
   },
 
   /**
-   * Validar token de autenticación
-   * @returns {Promise} Token válido o no
-   */
-  async validarToken() {
-    try {
-      const response = await axiosUsuario.get(
-        API_CONFIG.USUARIO.ENDPOINTS.VALIDAR_TOKEN
-      );
-      return response.data;
-    } catch (error) {
-      console.error('Error validando token:', error);
-      throw this.handleError(error);
-    }
-  },
-
-  /**
    * Cerrar sesión
    */
   logout() {
-    localStorage.removeItem('authToken');
     localStorage.removeItem('user');
     window.location.href = '/login';
   },
@@ -207,7 +196,7 @@ const UsuarioService = {
    * @returns {boolean}
    */
   isAuthenticated() {
-    return !!localStorage.getItem('authToken');
+    return !!localStorage.getItem('user');
   },
 
   /**

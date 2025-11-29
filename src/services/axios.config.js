@@ -22,16 +22,9 @@ export const axiosProducto = axios.create({
 // INTERCEPTORES PARA USUARIOS
 // =============================================
 
-// Interceptor de Request - Agregar token de autenticación
+// Interceptor de Request - Log de peticiones
 axiosUsuario.interceptors.request.use(
   (config) => {
-    // Obtener token del localStorage
-    const token = localStorage.getItem('authToken');
-    
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    
     console.log(`📤 Request a Usuario: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
@@ -52,9 +45,8 @@ axiosUsuario.interceptors.response.use(
       // El servidor respondió con un código de error
       console.error(`❌ Error ${error.response.status} de Usuario:`, error.response.data);
       
-      // Si es 401 (No autorizado), limpiar token y redirigir a login
+      // Si es 401 (No autorizado), limpiar sesión y redirigir a login
       if (error.response.status === 401) {
-        localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
       }
@@ -74,15 +66,9 @@ axiosUsuario.interceptors.response.use(
 // INTERCEPTORES PARA PRODUCTOS
 // =============================================
 
-// Interceptor de Request
+// Interceptor de Request - Log de peticiones
 axiosProducto.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    
     console.log(`📤 Request a Producto: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
@@ -103,7 +89,6 @@ axiosProducto.interceptors.response.use(
       console.error(`❌ Error ${error.response.status} de Producto:`, error.response.data);
       
       if (error.response.status === 401) {
-        localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
       }

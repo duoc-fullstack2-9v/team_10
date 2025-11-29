@@ -11,13 +11,12 @@ export const API_CONFIG = {
   USUARIO: {
     BASE_URL: isDevelopment ? '' : 'http://34.193.190.24:8081',
     ENDPOINTS: {
-      LOGIN: '/api/usuarios/login',
+      LOGIN: '/api/login',
       REGISTRO: '/api/usuarios',
       OBTENER_USUARIO: '/api/usuarios',
       ACTUALIZAR_USUARIO: '/api/usuarios',
       ELIMINAR_USUARIO: '/api/usuarios',
-      LISTAR_USUARIOS: '/api/usuarios',
-      VALIDAR_TOKEN: '/api/usuarios/validate'
+      LISTAR_USUARIOS: '/api/usuarios'
     }
   },
   

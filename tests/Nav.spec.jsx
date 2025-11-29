@@ -19,6 +19,21 @@ vi.mock("../src/contexts/AuthContext", () => ({
   useAuth: () => mockAuthContext
 }));
 
+// Mock del contexto del carrito
+const mockCartContext = {
+  cart: [],
+  addToCart: vi.fn(),
+  removeFromCart: vi.fn(),
+  clearCart: vi.fn(),
+  getCartTotal: vi.fn(() => 0),
+  getCartCount: vi.fn(() => 0),
+  getTotalItems: vi.fn(() => 0)
+};
+
+vi.mock("../src/contexts/CartContext", () => ({
+  useCart: () => mockCartContext
+}));
+
 // Mock de las imágenes
 vi.mock("../src/assets/img/huerto_logo.png", () => ({
   default: "mock-logo.png"
