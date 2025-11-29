@@ -6,7 +6,7 @@ import { API_CONFIG } from '../config/api.config';
 
 const UsuarioService = {
   /**
-   * Iniciar sesión
+   * Iniciar sesión usando el endpoint de login del microservicio con BCrypt
    * @param {Object} credentials - { email, password }
    * @returns {Promise} Datos del usuario y token
    */
@@ -14,72 +14,58 @@ const UsuarioService = {
     try {
       console.log('🔐 Intentando login con:', { email: credentials.email });
       
-      // Llamar directamente a la API sin interceptores para evitar problemas de autenticación
-      const url = `${API_CONFIG.USUARIO.BASE_URL}${API_CONFIG.USUARIO.ENDPOINTS.LISTAR_USUARIOS}`;
-      console.log('📡 Llamando a:', url);
+      // Usar el endpoint de login del microservicio
+      const url = `${API_CONFIG.USUARIO.BASE_URL}${API_CONFIG.USUARIO.ENDPOINTS.LOGIN}`;
+      console.log('📡 Llamando al endpoint de login:', url);
       
       let response;
       try {
         response = await fetch(url, {
-          method: 'GET',
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          mode: 'cors' // Asegurar que CORS esté habilitado
+          mode: 'cors',
+          body: JSON.stringify({
+            email: credentials.email,
+            password: credentials.password
+          })
         });
         
         console.log('📥 Respuesta del servidor:', response.status, response.statusText);
       } catch (fetchError) {
         console.error('🚨 Error de red al hacer fetch:', fetchError);
-        throw new Error('No se pudo conectar con el servidor. Verifica tu conexión o que el servidor esté activo.');
+        throw new Error('No se pudo conectar con el microservicio de usuarios. Verifica tu conexión.');
       }
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Error del servidor:', errorText);
-        throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
-      }
-
-      let usuarios;
+      let responseData;
       try {
-        usuarios = await response.json();
-        console.log(`👥 Total de usuarios recibidos: ${usuarios.length}`);
+        responseData = await response.json();
+        console.log('📦 Datos recibidos:', { success: responseData.success, message: responseData.message });
       } catch (jsonError) {
         console.error('🚨 Error al parsear JSON:', jsonError);
-        throw new Error('Respuesta inválida del servidor');
-      }
-      
-      // Buscar usuario con email y password coincidentes
-      const usuario = usuarios.find(u => 
-        u.email.toLowerCase() === credentials.email.toLowerCase() && 
-        u.password === credentials.password
-      );
-
-      if (!usuario) {
-        console.log('❌ Usuario no encontrado o contraseña incorrecta');
-        // Verificar si el email existe
-        const emailExists = usuarios.find(u => u.email.toLowerCase() === credentials.email.toLowerCase());
-        if (emailExists) {
-          console.log('📧 Email existe pero password no coincide');
-          console.log('Password recibida:', credentials.password);
-          console.log('Password en BD:', emailExists.password);
-        } else {
-          console.log('📧 Email no existe en la base de datos');
-        }
-        throw new Error('Email o contraseña incorrectos');
+        throw new Error('Respuesta inválida del microservicio');
       }
 
+      // Verificar si el login fue exitoso
+      if (!response.ok || !responseData.success) {
+        const errorMessage = responseData.message || 'Email o contraseña incorrectos';
+        console.log('❌ Login fallido:', errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      const usuario = responseData.usuario;
       console.log('✅ Usuario autenticado:', { 
-        id: usuario.id, 
+        id: usuario.idUsuario, 
         nombre: usuario.nombre, 
         email: usuario.email,
         rol: usuario.idTipoUsuario 
       });
 
-      // Generar un token simple (en producción esto vendría del backend)
+      // Generar un token simple (tu microservicio puede devolver un JWT en el futuro)
       const token = btoa(`${usuario.email}:${Date.now()}`);
       
-      // Guardar token en localStorage
+      // Guardar token y usuario en localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(usuario));
       
@@ -91,13 +77,7 @@ const UsuarioService = {
       };
     } catch (error) {
       console.error('💥 Error en login:', error);
-      // Re-lanzar el error original si es uno de los mensajes conocidos
-      if (error.message.includes('Email o contraseña incorrectos') || 
-          error.message.includes('No se pudo conectar') ||
-          error.message.includes('servidor')) {
-        throw error;
-      }
-      throw new Error('Error inesperado al iniciar sesión');
+      throw error;
     }
   },
 
