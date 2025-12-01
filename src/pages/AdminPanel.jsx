@@ -30,6 +30,15 @@ function AdminPanel() {
   const [showCreateProductForm, setShowCreateProductForm] = useState(false);
   const [savingProduct, setSavingProduct] = useState(false);
 
+  // Estados para mensajes de feedback
+  const [feedback, setFeedback] = useState({ message: '', type: '' });
+  
+  // Función para mostrar mensajes
+  const showFeedback = (message, type = 'success') => {
+    setFeedback({ message, type });
+    setTimeout(() => setFeedback({ message: '', type: '' }), 5000);
+  };
+
   // Estados para formularios de usuarios
   const [formData, setFormData] = useState({
     nombre: '',
@@ -173,11 +182,11 @@ function AdminPanel() {
       };
 
       await UsuarioService.registrar(userData);
-      alert('Usuario creado exitosamente');
+      showFeedback('Usuario creado exitosamente', 'success');
       closeForm();
       loadUsers();
     } catch (err) {
-      alert('Error al crear usuario: ' + err.message);
+      showFeedback(err.message || 'Error al crear usuario', 'error');
     } finally {
       setSavingUser(false);
     }
@@ -195,11 +204,11 @@ function AdminPanel() {
       };
 
       await UsuarioService.actualizarUsuario(editingUser.id, userData);
-      alert('Usuario actualizado exitosamente');
+      showFeedback('Usuario actualizado exitosamente', 'success');
       closeForm();
       loadUsers();
     } catch (err) {
-      alert('Error al actualizar usuario: ' + err.message);
+      showFeedback(err.message || 'Error al actualizar usuario', 'error');
     } finally {
       setSavingUser(false);
     }
@@ -208,17 +217,17 @@ function AdminPanel() {
   // Eliminar usuario
   const handleDeleteUser = async (userId, userName) => {
     if (userId === user.id) {
-      alert('No puedes eliminar tu propio usuario');
+      showFeedback('No puedes eliminar tu propio usuario', 'error');
       return;
     }
 
     if (window.confirm(`¿Estás seguro de eliminar al usuario "${userName}"?`)) {
       try {
         await UsuarioService.eliminarUsuario(userId);
-        alert('Usuario eliminado exitosamente');
+        showFeedback('Usuario eliminado exitosamente', 'success');
         loadUsers();
       } catch (err) {
-        alert('Error al eliminar usuario: ' + err.message);
+        showFeedback(err.message || 'Error al eliminar usuario', 'error');
       }
     }
   };
@@ -264,14 +273,14 @@ function AdminPanel() {
     
     // Validar datos requeridos
     if (!productFormData.idProducto || !productFormData.nombre || !productFormData.precio) {
-      alert('Por favor completa todos los campos requeridos: ID, Nombre y Precio');
+      showFeedback('Por favor completa todos los campos requeridos: ID, Nombre y Precio', 'error');
       return;
     }
 
     // Validar formato del ID
     const idPattern = /^[A-Z]{2}[0-9]{3}$/;
     if (!idPattern.test(productFormData.idProducto)) {
-      alert('El ID del producto debe seguir el formato XX000 (2 letras mayúsculas + 3 números)');
+      showFeedback('El ID del producto debe seguir el formato XX000 (2 letras mayúsculas + 3 números)', 'error');
       return;
     }
 
@@ -291,12 +300,12 @@ function AdminPanel() {
 
       const createdProduct = await ProductoService.crearProducto(productData);
       console.log('✅ Producto creado:', createdProduct);
-      alert('Producto creado exitosamente: ' + createdProduct.nombre);
+      showFeedback('Producto creado exitosamente: ' + createdProduct.nombre, 'success');
       resetProductForm();
       loadProducts();
     } catch (err) {
       console.error('💥 Error en handleCreateProduct:', err);
-      alert('Error al crear producto: ' + err.message);
+      showFeedback(err.message || 'Error al crear producto', 'error');
     } finally {
       setSavingProduct(false);
     }
@@ -316,11 +325,11 @@ function AdminPanel() {
       };
 
       await ProductoService.actualizarProducto(productData.idProducto, productData);
-      alert('Producto actualizado exitosamente');
+      showFeedback('Producto actualizado exitosamente', 'success');
       closeProductForm();
       loadProducts();
     } catch (err) {
-      alert('Error al actualizar producto: ' + err.message);
+      showFeedback(err.message || 'Error al actualizar producto', 'error');
     } finally {
       setSavingProduct(false);
     }
@@ -331,10 +340,10 @@ function AdminPanel() {
     if (window.confirm(`¿Estás seguro de eliminar el producto "${productName}"?`)) {
       try {
         await ProductoService.eliminarProducto(productId);
-        alert('Producto eliminado exitosamente');
+        showFeedback('Producto eliminado exitosamente', 'success');
         loadProducts();
       } catch (err) {
-        alert('Error al eliminar producto: ' + err.message);
+        showFeedback(err.message || 'Error al eliminar producto', 'error');
       }
     }
   };
@@ -428,8 +437,38 @@ function AdminPanel() {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
+        @keyframes slideIn {
+          from {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
       `}</style>
       <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+      {/* Mensaje de feedback */}
+      {feedback.message && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          padding: '15px 25px',
+          borderRadius: '8px',
+          backgroundColor: feedback.type === 'success' ? '#d4edda' : '#f8d7da',
+          color: feedback.type === 'success' ? '#155724' : '#721c24',
+          border: `1px solid ${feedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+          zIndex: 9999,
+          maxWidth: '400px',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          <strong>{feedback.type === 'success' ? '✓' : '✕'}</strong> {feedback.message}
+        </div>
+      )}
+
       <div style={{ marginBottom: '30px', borderBottom: '2px solid #2c3e50', paddingBottom: '10px' }}>
         <h1 style={{ color: '#2c3e50', margin: 0 }}>Panel de Administración</h1>
         <p style={{ color: '#7f8c8d', margin: '5px 0' }}>
