@@ -12,11 +12,8 @@ const UsuarioService = {
    */
   async login(credentials) {
     try {
-      console.log('🔐 Intentando login con:', { email: credentials.email });
-      
       // Usar el endpoint de login del microservicio
       const url = `${API_CONFIG.USUARIO.BASE_URL}${API_CONFIG.USUARIO.ENDPOINTS.LOGIN}`;
-      console.log('📡 Llamando al endpoint de login:', url);
       
       let response;
       try {
@@ -31,8 +28,6 @@ const UsuarioService = {
             password: credentials.password
           })
         });
-        
-        console.log('📥 Respuesta del servidor:', response.status, response.statusText);
       } catch (fetchError) {
         console.error('🚨 Error de red al hacer fetch:', fetchError);
         throw new Error('No se pudo conectar con el microservicio de usuarios. Verifica tu conexión.');
@@ -41,7 +36,6 @@ const UsuarioService = {
       let responseData;
       try {
         responseData = await response.json();
-        console.log('📦 Datos recibidos:', { success: responseData.success, message: responseData.message });
       } catch (jsonError) {
         console.error('🚨 Error al parsear JSON:', jsonError);
         throw new Error('Respuesta inválida del microservicio');
@@ -50,7 +44,6 @@ const UsuarioService = {
       // Verificar si el login fue exitoso
       if (!response.ok || !responseData.success) {
         const errorMessage = responseData.message || 'Email o contraseña incorrectos';
-        console.log('❌ Login fallido:', errorMessage);
         throw new Error(errorMessage);
       }
 
@@ -65,18 +58,9 @@ const UsuarioService = {
         idComuna: responseData.idComuna,
         idTipoUsuario: responseData.idTipoUsuario
       };
-      
-      console.log('✅ Usuario autenticado:', { 
-        id: usuario.idUsuario, 
-        nombre: usuario.nombre, 
-        email: usuario.email,
-        rol: usuario.idTipoUsuario 
-      });
 
       // Guardar usuario en localStorage para mantener sesión
       localStorage.setItem('user', JSON.stringify(usuario));
-      
-      console.log('💾 Usuario guardado en localStorage');
       
       return {
         usuario: usuario

@@ -22,10 +22,9 @@ export const axiosProducto = axios.create({
 // INTERCEPTORES PARA USUARIOS
 // =============================================
 
-// Interceptor de Request - Log de peticiones
+// Interceptor de Request
 axiosUsuario.interceptors.request.use(
   (config) => {
-    console.log(`📤 Request a Usuario: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
@@ -37,7 +36,6 @@ axiosUsuario.interceptors.request.use(
 // Interceptor de Response - Manejar respuestas y errores
 axiosUsuario.interceptors.response.use(
   (response) => {
-    console.log(`✅ Response de Usuario: ${response.status} ${response.config.url}`);
     return response;
   },
   (error) => {
@@ -66,10 +64,9 @@ axiosUsuario.interceptors.response.use(
 // INTERCEPTORES PARA PRODUCTOS
 // =============================================
 
-// Interceptor de Request - Log de peticiones
+// Interceptor de Request
 axiosProducto.interceptors.request.use(
   (config) => {
-    console.log(`📤 Request a Producto: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
@@ -81,7 +78,6 @@ axiosProducto.interceptors.request.use(
 // Interceptor de Response
 axiosProducto.interceptors.response.use(
   (response) => {
-    console.log(`✅ Response de Producto: ${response.status} ${response.config.url}`);
     return response;
   },
   (error) => {
