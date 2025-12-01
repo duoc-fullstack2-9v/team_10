@@ -197,9 +197,15 @@ const UsuarioService = {
   handleError(error) {
     if (error.response) {
       // El servidor respondió con error
-      const message = error.response.data?.message || 
-                     error.response.data?.error || 
-                     'Error en el servidor';
+      const data = error.response.data;
+      
+      // Si data es un string, usarlo directamente
+      if (typeof data === 'string') {
+        return new Error(data);
+      }
+      
+      // Si es un objeto, buscar message o error
+      const message = data?.message || data?.error || 'Error en el servidor';
       return new Error(message);
     } else if (error.request) {
       // No hubo respuesta del servidor
