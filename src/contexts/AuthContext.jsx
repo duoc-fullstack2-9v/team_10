@@ -18,9 +18,8 @@ export const AuthProvider = ({ children }) => {
   // Cargar usuario desde localStorage al iniciar
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
     
-    if (savedUser && token) {
+    if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
     setLoading(false);
@@ -36,10 +35,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await UsuarioService.login({ email, password });
       
-      if (response.usuario && response.token) {
+      if (response.usuario) {
         setUser(response.usuario);
         localStorage.setItem('user', JSON.stringify(response.usuario));
-        // El token ya se guarda automáticamente en usuario.service.js
         
         return { 
           success: true, 
