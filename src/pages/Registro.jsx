@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import UsuarioService from '../services/usuario.service';
 import '../assets/form.css';
 
 function Registro() {
@@ -102,35 +104,9 @@ function Registro() {
   };
 
   // Estados adicionales para el registro
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [registroExitoso, setRegistroExitoso] = useState(false);
-
-  // Función para enviar usuario a la API
-  const crearUsuario = async (userData) => {
-    try {
-      const response = await fetch('/api/usuarios', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData)
-      });
-
-      const result = await response.text();
-      
-      if (response.ok) {
-        return { success: true, message: result };
-      } else {
-        return { success: false, message: result || 'Error al crear usuario' };
-      }
-    } catch (error) {
-      console.error('Error al crear usuario:', error);
-      return { 
-        success: false, 
-        message: 'No se pudo conectar con el servidor. Verifica que la API esté funcionando.' 
-      };
-    }
-  };
 
   // Manejar envío del formulario
   const handleSubmit = async (e) => {
@@ -159,32 +135,28 @@ function Registro() {
     };
 
     try {
-      const result = await crearUsuario(userData);
+      await UsuarioService.registrar(userData);
       
-      if (result.success) {
-        setRegistroExitoso(true);
-        alert('¡Registro exitoso! Usuario creado correctamente en la base de datos.');
-        
-        // Resetear formulario
-        setFormData({
-          nombre: '',
-          correo: '',
-          password: '',
-          confirmar: '',
-          telefono: '',
-          region: '',
-          comuna: ''
-        });
-      } else {
-        // Manejar errores específicos del servidor
-        if (result.message.includes('email')) {
-          setErrors({ correo: 'Este email ya está registrado' });
-        } else {
-          setErrors({ general: result.message });
-        }
-      }
+      setRegistroExitoso(true);
+      alert('¡Registro exitoso! Ya puedes iniciar sesión con tu cuenta.');
+      
+      // Redirigir al login después de 2 segundos
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+      
     } catch (error) {
-      setErrors({ general: 'Error inesperado. Inténtalo nuevamente.' });
+      // Manejar errores específicos del servidor
+      const errorMessage = error.message || 'Error al crear usuario';
+      
+      if (errorMessage.toLowerCase().includes('email') || 
+          errorMessage.toLowerCase().includes('correo') ||
+          errorMessage.toLowerCase().includes('existe') ||
+          errorMessage.toLowerCase().includes('duplicado')) {
+        setErrors({ correo: 'Este correo electrónico ya está registrado' });
+      } else {
+        setErrors({ general: errorMessage });
+      }
     } finally {
       setIsLoading(false);
     }
