@@ -138,7 +138,6 @@ function Registro() {
       await UsuarioService.registrar(userData);
       
       setRegistroExitoso(true);
-      alert('¡Registro exitoso! Ya puedes iniciar sesión con tu cuenta.');
       
       // Redirigir al login después de 2 segundos
       setTimeout(() => {
@@ -149,10 +148,9 @@ function Registro() {
       // Manejar errores específicos del servidor
       const errorMessage = error.message || 'Error al crear usuario';
       
-      if (errorMessage.toLowerCase().includes('email') || 
-          errorMessage.toLowerCase().includes('correo') ||
-          errorMessage.toLowerCase().includes('existe') ||
-          errorMessage.toLowerCase().includes('duplicado')) {
+      // El servidor devuelve: "Ya existe un usuario con ese email"
+      if (errorMessage.includes('email') || 
+          errorMessage.includes('existe')) {
         setErrors({ correo: 'Este correo electrónico ya está registrado' });
       } else {
         setErrors({ general: errorMessage });

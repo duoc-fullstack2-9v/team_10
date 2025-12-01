@@ -84,7 +84,13 @@ const UsuarioService = {
       );
       return response.data;
     } catch (error) {
-      console.error('Error en registro:', error);
+      // Manejar respuesta de error del servidor
+      if (error.response && error.response.data) {
+        const errorMessage = typeof error.response.data === 'string' 
+          ? error.response.data 
+          : error.response.data.message || error.response.data.error;
+        throw new Error(errorMessage || 'Error al registrar usuario');
+      }
       throw this.handleError(error);
     }
   },
