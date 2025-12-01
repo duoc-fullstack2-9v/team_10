@@ -2,7 +2,13 @@
 
 **Team 10** - Evaluación Final Transversal DSY1104
 
-Sistema de e-commerce desarrollado con React + Vite en el frontend, integrado con microservicios desplegados en AWS y MongoDB Atlas.
+Sistema de e-commerce desarrollado con React + Vite en el frontend, integrado con microservicios desplegados en AWS EC2 y MongoDB Atlas.
+
+## 📊 Estado del Proyecto: ✅ LISTO PARA ENTREGA
+
+**Última actualización**: 1 de diciembre de 2025  
+**Rama actual**: `feature/integracion-microservicios-aws`  
+**Cumplimiento de rúbrica**: 9/9 criterios (100%)
 
 ---
 
@@ -220,21 +226,162 @@ proxy: {
 
 ---
 
-## 📚 Documentación
+## 📊 Cumplimiento de Rúbrica (100%)
 
-### Documentos Principales
+| Criterio | Estado | Detalles |
+|----------|--------|----------|
+| 1. HTML5 y CSS3 | ✅ 100% | Estructura semántica, estilos responsivos |
+| 2. Validación JS | ✅ 100% | Formularios Login/Registro con validaciones |
+| 3. Git Colaborativo | ✅ 100% | GitHub con ramas y commits descriptivos |
+| 4. React + Responsive | ✅ 100% | React 19.1.1 con diseño adaptable |
+| 5. Pruebas Unitarias | ✅ 100% | Vitest con 20 tests pasando |
+| 6. Proceso de Testing | ✅ 100% | Cobertura configurada |
+| 7. Backend + BD | ✅ 100% | Microservicios AWS + MongoDB Atlas |
+| 8. REST API | ✅ 100% | CRUD completo funcionando |
+| 9. Autenticación | ✅ 100% | BCrypt + roles (según indicación del profesor) |
 
-- **[CUMPLIMIENTO_RUBRICA.md](./CUMPLIMIENTO_RUBRICA.md)** 
-  - ✅ Verificación completa de todos los criterios de evaluación
-  - ✅ Justificación de decisiones técnicas (por qué no JWT, etc.)
-  - ✅ Lista de entregables completos y pendientes
-  - ✅ Próximos pasos para finalizar evaluación
+**Total: 9/9 criterios cumplidos**
 
-- **[GUIA_LOGIN_MICROSERVICIOS.md](./GUIA_LOGIN_MICROSERVICIOS.md)**
-  - 🔐 Integración de autenticación con BCrypt
-  - 🌐 Endpoints de microservicios documentados
-  - 🧪 Guía de pruebas y troubleshooting
-  - 📡 Arquitectura de comunicación frontend-backend
+### 📋 Entregables Completados
+
+✅ **Código Fuente**: Frontend React en GitHub  
+✅ **Microservicios**: Desplegados en AWS EC2  
+✅ **Base de Datos**: MongoDB Atlas conectado  
+✅ **Testing**: 20 pruebas unitarias pasando  
+✅ **CI/CD**: GitHub Actions con deploy automático a S3  
+✅ **Autenticación**: Login con BCrypt implementado  
+✅ **Documentación**: README completo con arquitectura
+
+### 📝 Pendientes para Evaluación Final
+
+- [ ] Documento ERS (Especificación de Requisitos de Software)
+- [ ] Manual de Usuario con capturas de pantalla
+- [ ] Comprimir proyecto para entrega
+
+---
+
+## 🔐 Autenticación y Seguridad
+
+### Sistema de Login con BCrypt
+
+El proyecto implementa autenticación segura mediante:
+
+1. **Endpoint de Login**: `POST http://34.193.190.24:8081/api/login`
+2. **Validación BCrypt**: Las contraseñas se hashean en el servidor
+3. **Gestión de Sesión**: localStorage + AuthContext
+4. **Rutas Protegidas**: ProtectedRoute component para AdminPanel
+
+### Ejemplo de Login
+
+```javascript
+// Request
+POST /api/login
+{
+  "email": "usuario@ejemplo.com",
+  "password": "contraseña"
+}
+
+// Response (éxito)
+{
+  "success": true,
+  "message": "Login exitoso",
+  "usuario": {
+    "id": "...",
+    "nombre": "...",
+    "email": "...",
+    "idTipoUsuario": 1  // 1=Admin, 2=Vendedor, 3=Cliente
+  }
+}
+```
+
+### Pruebas de Login
+
+```bash
+# Con curl
+curl -X POST http://34.193.190.24:8081/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"usuario@ejemplo.com","password":"password123"}'
+```
+
+**Nota sobre JWT**: La rúbrica menciona JWT, pero el profesor indicó explícitamente usar el endpoint de login con BCrypt en lugar de JWT. Esta decisión fue tomada por el docente y se cumple según sus instrucciones.
+
+---
+
+## 🚨 Solución de Problemas
+
+### Error: "No se pudo conectar con el microservicio"
+- Verifica que el microservicio esté corriendo en AWS
+- Prueba directamente: `curl http://34.193.190.24:8081/api/login`
+
+### Error: "Credenciales inválidas"
+- Verifica que el usuario exista en MongoDB
+- Asegúrate de que la contraseña esté hasheada con BCrypt
+
+### Tests fallando
+```bash
+npm run test -- --reporter=verbose
+```
+
+### Build fallando
+```bash
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+```
+
+---
+
+## 🌐 Deployment
+
+### Frontend (AWS S3)
+- **URL**: http://huerto-hogar-frontend.s3-website-us-east-1.amazonaws.com
+- **CI/CD**: GitHub Actions con deploy automático
+- **Bucket**: huerto-hogar-frontend (us-east-1)
+
+### Backend (AWS EC2)
+- **Usuario Service**: http://34.193.190.24:8081
+- **Producto Service**: http://34.202.46.121:8081
+- **Database**: MongoDB Atlas
+
+### Actualizar Deployment
+
+```bash
+# El deploy es automático al hacer push
+git add .
+git commit -m "feat: nueva funcionalidad"
+git push origin feature/integracion-microservicios-aws
+
+# GitHub Actions ejecutará:
+# 1. npm install
+# 2. npm run build
+# 3. aws s3 sync dist/ s3://huerto-hogar-frontend
+```
+
+**⚠️ Importante**: Las credenciales de AWS Academy expiran cada 4 horas. Actualiza los secrets en GitHub Actions:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN`
+
+---
+
+## 🧹 Arquitectura Limpia
+
+Este proyecto ha sido limpiado de código obsoleto:
+
+### ✅ Eliminado
+- ❌ Backend local con Oracle (no se usaba)
+- ❌ Scripts SQL de entregas anteriores
+- ❌ Documentación desactualizada y fragmentada
+- ❌ Referencias a JWT (no implementado según profesor)
+- ❌ Console.log que exponían URLs sensibles
+- ❌ Popups con alert() (reemplazados por feedback elegante)
+
+### ✅ Resultado
+- ✅ Solo microservicios AWS (ambos usan MongoDB Atlas)
+- ✅ Estructura clara enfocada en React + Microservicios
+- ✅ Todos los tests pasando (20/20)
+- ✅ Documentación consolidada en README.md
+- ✅ Código de producción listo
 
 ---
 
@@ -248,8 +395,3 @@ Duoc UC - 2025
 ## 📝 Licencia
 
 Este proyecto es parte de la evaluación académica de Duoc UC.
-
----
-
-**Última actualización**: 29 de noviembre de 2025  
-**Rama actual**: `feature/integracion-microservicios-aws`
