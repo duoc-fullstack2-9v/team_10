@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import UsuarioService from '../services/usuario.service';
 import ProductoService from '../services/producto.service';
+import ImagenService from '../services/imagen.service';
+import Toast from '../components/Toast';
 
 function AdminPanel() {
   const { user, isAdmin } = useAuth();
@@ -32,11 +34,16 @@ function AdminPanel() {
 
   // Estados para mensajes de feedback
   const [feedback, setFeedback] = useState({ message: '', type: '' });
+  const [toast, setToast] = useState({ message: '', type: '' });
   
   // Función para mostrar mensajes
   const showFeedback = (message, type = 'success') => {
+    setToast({ message, type });
     setFeedback({ message, type });
-    setTimeout(() => setFeedback({ message: '', type: '' }), 5000);
+    setTimeout(() => {
+      setFeedback({ message: '', type: '' });
+      setToast({ message: '', type: '' });
+    }, 5000);
   };
 
   // Estados para formularios de usuarios
@@ -60,7 +67,10 @@ function AdminPanel() {
     origen: '',
     certificacionOrganica: false,
     estaActivo: true,
-    idCategoria: 1
+    idCategoria: 1,
+    linkImagen: '',
+    imageFile: null,
+    imagePreview: null
   });
 
   // Datos de categorías basadas en la API
@@ -148,6 +158,63 @@ function AdminPanel() {
     setProductFormData(prev => ({
       ...prev,
       [name]: processedValue
+    }));
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    
+    if (!file) {
+      return;
+    }
+
+    // Validar que sea una imagen
+    if (!file.type.startsWith('image/')) {
+      setToast({ message: 'Por favor selecciona un archivo de imagen válido', type: 'error' });
+      return;
+    }
+
+    // Validar tamaño (máximo 5MB)
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      setToast({ message: 'La imagen no debe superar los 5MB', type: 'error' });
+      return;
+    }
+
+    // Mostrar preview local inmediatamente
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setProductFormData(prev => ({
+        ...prev,
+        imagePreview: event.target.result
+      }));
+    };
+    reader.readAsDataURL(file);
+
+    // Subir a S3 en segundo plano
+    try {
+      setToast({ message: 'Subiendo imagen a S3...', type: 'info' });
+      const s3Url = await ImagenService.subirImagenS3(file);
+      
+      setProductFormData(prev => ({
+        ...prev,
+        linkImagen: s3Url,
+        imageFile: file
+      }));
+      
+      setToast({ message: '✅ Imagen subida exitosamente', type: 'success' });
+    } catch (error) {
+      console.error('Error al subir imagen:', error);
+      setToast({ message: 'Error al subir imagen. Puedes usar el preview local.', type: 'warning' });
+    }
+  };
+
+  const removeImage = () => {
+    setProductFormData(prev => ({
+      ...prev,
+      imageFile: null,
+      imagePreview: null,
+      linkImagen: ''
     }));
   };
 
@@ -293,8 +360,16 @@ function AdminPanel() {
         ...productFormData,
         precio: parseFloat(productFormData.precio) || 0,
         stock: parseInt(productFormData.stock) || 0,
-        idCategoria: parseInt(productFormData.idCategoria) || 1
+        idCategoria: parseInt(productFormData.idCategoria) || 1,
+        // Si no hay imagen, usar una genérica SVG embebida
+        linkImagen: productFormData.linkImagen || 
+                   productFormData.imagePreview || 
+                   'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="45%25" font-size="80" text-anchor="middle" dy=".3em"%3E🌱%3C/text%3E%3Ctext x="50%25" y="75%25" font-size="14" text-anchor="middle" fill="%23999"%3ESin imagen%3C/text%3E%3C/svg%3E'
       };
+
+      // Eliminar campos temporales que no van a la DB
+      delete productData.imageFile;
+      delete productData.imagePreview;
 
       console.log('📦 Datos a enviar:', productData);
 
@@ -359,7 +434,10 @@ function AdminPanel() {
       origen: product.origen || '',
       certificacionOrganica: product.certificacionOrganica || false,
       estaActivo: product.estaActivo || true,
-      idCategoria: product.idCategoria || 1
+      idCategoria: product.idCategoria || 1,
+      linkImagen: product.linkImagen || '',
+      imageFile: null,
+      imagePreview: product.linkImagen || null
     });
     setEditingProduct(product);
     setShowCreateProductForm(false);
@@ -377,7 +455,10 @@ function AdminPanel() {
       origen: '',
       certificacionOrganica: false,
       estaActivo: true,
-      idCategoria: 1
+      idCategoria: 1,
+      linkImagen: '',
+      imageFile: null,
+      imagePreview: null
     });
   };
 
@@ -467,6 +548,15 @@ function AdminPanel() {
         }}>
           <strong>{feedback.type === 'success' ? '✓' : '✕'}</strong> {feedback.message}
         </div>
+      )}
+
+      {/* Toast notification component */}
+      {toast.message && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast({ message: '', type: '' })} 
+        />
       )}
 
       <div style={{ marginBottom: '30px', borderBottom: '2px solid #2c3e50', paddingBottom: '10px' }}>
@@ -997,6 +1087,86 @@ function AdminPanel() {
                       <option value={false}>No Orgánico</option>
                       <option value={true}>Orgánico</option>
                     </select>
+                  </div>
+
+                  {/* Campo para URL de imagen o subir archivo */}
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label>Imagen del Producto:</label>
+                    <div style={{ marginTop: '10px' }}>
+                      <input
+                        type="text"
+                        name="linkImagen"
+                        value={productFormData.linkImagen}
+                        onChange={handleProductInputChange}
+                        placeholder="URL de la imagen (https://...)"
+                        style={{ 
+                          width: 'calc(100% - 120px)', 
+                          padding: '8px', 
+                          marginRight: '10px',
+                          borderRadius: '4px',
+                          border: '1px solid #ddd'
+                        }}
+                      />
+                      <span style={{ color: '#666', fontSize: '14px' }}>ó</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        style={{ 
+                          marginLeft: '10px',
+                          padding: '8px',
+                          cursor: 'pointer'
+                        }}
+                      />
+                    </div>
+                    {(productFormData.imagePreview || productFormData.linkImagen) && (
+                      <div style={{ 
+                        marginTop: '15px', 
+                        position: 'relative',
+                        display: 'inline-block'
+                      }}>
+                        <img 
+                          src={productFormData.imagePreview || productFormData.linkImagen} 
+                          alt="Preview" 
+                          style={{ 
+                            width: '200px', 
+                            height: '200px', 
+                            objectFit: 'cover',
+                            borderRadius: '8px',
+                            border: '2px solid #ddd'
+                          }}
+                          onError={(e) => {
+                            e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="45%25" font-size="80" text-anchor="middle" dy=".3em"%3E🌱%3C/text%3E%3Ctext x="50%25" y="75%25" font-size="14" text-anchor="middle" fill="%23999"%3ESin imagen%3C/text%3E%3C/svg%3E';
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={removeImage}
+                          style={{
+                            position: 'absolute',
+                            top: '5px',
+                            right: '5px',
+                            backgroundColor: '#e74c3c',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '30px',
+                            height: '30px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Quitar imagen"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    <small style={{ display: 'block', marginTop: '5px', color: '#666' }}>
+                      💡 Puedes pegar una URL o subir un archivo (máx. 5MB). Si no subes imagen, se usará una genérica.
+                    </small>
                   </div>
                 </div>
                 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import ProductoService from '../services/producto.service';
+import Toast from '../components/Toast';
 
 function ProductDetail() {
   const { id } = useParams();
@@ -13,6 +14,7 @@ function ProductDetail() {
   const [error, setError] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [toast, setToast] = useState({ message: '', type: '' });
 
   useEffect(() => {
     loadProduct();
@@ -48,8 +50,10 @@ function ProductDetail() {
     
     setTimeout(() => {
       setAddingToCart(false);
-      // Mostrar notificación de éxito
-      alert(`${quantity} ${product.nombre}(s) agregado(s) al carrito`);
+      setToast({ 
+        message: `${quantity} ${product.nombre}${quantity > 1 ? 's' : ''} agregado${quantity > 1 ? 's' : ''} al carrito`, 
+        type: 'success' 
+      });
     }, 500);
   };
 
@@ -125,6 +129,11 @@ function ProductDetail() {
 
   return (
     <>
+      <Toast 
+        message={toast.message} 
+        type={toast.type} 
+        onClose={() => setToast({ message: '', type: '' })}
+      />
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }

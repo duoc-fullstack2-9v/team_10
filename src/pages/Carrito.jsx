@@ -130,9 +130,9 @@ function Carrito() {
           padding: '20px'
         }}>
           {cartItems.map((item) => {
-            const imagenUrl = item.imagen 
-              ? `data:image/jpeg;base64,${item.imagen}` 
-              : ProductoService.getImagenGenerica();
+            // Usar linkImagen si está disponible, sino usar imagen en base64, sino genérica
+            const imagenUrl = item.linkImagen || 
+              (item.imagen ? `data:image/jpeg;base64,${item.imagen}` : null);
             const subtotal = item.precio * item.quantity;
 
             return (
@@ -149,14 +149,18 @@ function Carrito() {
               >
                 {/* Imagen del producto */}
                 <img
-                  src={imagenUrl}
+                  src={imagenUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="45%25" font-size="80" text-anchor="middle" dy=".3em"%3E🌱%3C/text%3E%3Ctext x="50%25" y="75%25" font-size="14" text-anchor="middle" fill="%23999"%3ESin imagen%3C/text%3E%3C/svg%3E'}
                   alt={item.nombre}
                   style={{
                     width: '100%',
                     height: '120px',
                     objectFit: 'cover',
                     borderRadius: '8px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    backgroundColor: '#f8f9fa'
+                  }}
+                  onError={(e) => {
+                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="45%25" font-size="80" text-anchor="middle" dy=".3em"%3E🌱%3C/text%3E%3Ctext x="50%25" y="75%25" font-size="14" text-anchor="middle" fill="%23999"%3ESin imagen%3C/text%3E%3C/svg%3E';
                   }}
                   onClick={() => navigate(`/productos/${item.idProducto}`)}
                 />

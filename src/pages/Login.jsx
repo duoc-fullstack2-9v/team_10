@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Toast from '../components/Toast';
 import '../assets/form.css';
 
 function Login() {
@@ -16,6 +17,7 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [toast, setToast] = useState({ message: '', type: '' });
 
   // Manejar cambios en los inputs
   const handleChange = (e) => {
@@ -74,23 +76,26 @@ function Login() {
       
       if (result.success) {
         const user = result.user;
+        setToast({ message: `¡Bienvenido ${user.nombre}!`, type: 'success' });
         
-        // Redirigir según el tipo de usuario
-        if (user.idTipoUsuario === 1) {
-          // Administrador -> Panel de admin
-          navigate('/admin');
-        } else if (user.idTipoUsuario === 2) {
-          // Vendedor -> Home
-          navigate('/');
-        } else {
-          // Cliente -> Home
-          navigate('/');
-        }
+        // Redirigir según el tipo de usuario después del toast
+        setTimeout(() => {
+          if (user.idTipoUsuario === 1) {
+            navigate('/admin');
+          } else if (user.idTipoUsuario === 2) {
+            navigate('/');
+          } else {
+            navigate('/');
+          }
+        }, 1500);
       } else {
         setLoginError(result.message || 'Email o contraseña incorrectos');
+        setToast({ message: 'Email o contraseña incorrectos', type: 'error' });
       }
     } catch (error) {
-      setLoginError('Error al iniciar sesión. Por favor, intenta nuevamente.');
+      const errorMsg = 'Error al iniciar sesión. Por favor, intenta nuevamente.';
+      setLoginError(errorMsg);
+      setToast({ message: errorMsg, type: 'error' });
       console.error('Error en login:', error);
     } finally {
       setIsLoading(false);
@@ -99,6 +104,11 @@ function Login() {
 
   return (
     <main>
+      <Toast 
+        message={toast.message} 
+        type={toast.type} 
+        onClose={() => setToast({ message: '', type: '' })}
+      />
       <form onSubmit={handleSubmit}>
         <h2>Iniciar Sesión</h2>
         

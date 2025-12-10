@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UsuarioService from '../services/usuario.service';
+import Toast from '../components/Toast';
 import '../assets/form.css';
 
 function Registro() {
@@ -107,6 +108,7 @@ function Registro() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [registroExitoso, setRegistroExitoso] = useState(false);
+  const [toast, setToast] = useState({ message: '', type: '' });
 
   // Manejar envío del formulario
   const handleSubmit = async (e) => {
@@ -138,11 +140,12 @@ function Registro() {
       await UsuarioService.registrar(userData);
       
       setRegistroExitoso(true);
+      setToast({ message: '¡Usuario registrado correctamente! Redirigiendo al login...', type: 'success' });
       
-      // Redirigir al login después de 2 segundos
+      // Redirigir al login después de 3 segundos
       setTimeout(() => {
         navigate('/login');
-      }, 2000);
+      }, 3000);
       
     } catch (error) {
       // Manejar errores específicos del servidor
@@ -152,8 +155,10 @@ function Registro() {
       if (errorMessage.includes('email') || 
           errorMessage.includes('existe')) {
         setErrors({ correo: 'Este correo electrónico ya está registrado' });
+        setToast({ message: 'Este correo electrónico ya está registrado', type: 'error' });
       } else {
         setErrors({ general: errorMessage });
+        setToast({ message: errorMessage, type: 'error' });
       }
     } finally {
       setIsLoading(false);
@@ -162,6 +167,11 @@ function Registro() {
 
   return (
     <main>
+      <Toast 
+        message={toast.message} 
+        type={toast.type} 
+        onClose={() => setToast({ message: '', type: '' })}
+      />
       <form onSubmit={handleSubmit}>
         <h2>Registro de Usuario</h2>
         

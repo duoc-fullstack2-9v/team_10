@@ -181,8 +181,20 @@ function Nav() {
             ) : (
               // Usuario no autenticado
               <>
-                <Link to="/login" onClick={() => setIsMenuOpen(false)}>Iniciar Sesión</Link>
-                <Link to="/registro" onClick={() => setIsMenuOpen(false)}>Registrar Usuario</Link>
+                <Link 
+                  to="/login" 
+                  className={isActiveLink('/login') ? 'nav-link-active' : ''}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Iniciar Sesión
+                </Link>
+                <Link 
+                  to="/registro" 
+                  className={isActiveLink('/registro') ? 'nav-link-active' : ''}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Registrar Usuario
+                </Link>
                 <Link to="/carrito" className="cart-link" onClick={() => setIsMenuOpen(false)} style={{ position: 'relative' }}>
                   <img src={carroImg} width="40" alt="Carrito" />
                   <span>Cart</span>
