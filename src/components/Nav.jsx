@@ -104,7 +104,7 @@ function Nav() {
                   color: '#2c3e50',
                   fontSize: '0.9em'
                 }}>
-                  <span>👤 {user.nombre}</span>
+                  <span>{user.nombre}</span>
                   <span style={{ 
                     padding: '2px 6px', 
                     backgroundColor: user.idTipoUsuario === 1 ? '#e74c3c' : 
@@ -132,7 +132,26 @@ function Nav() {
                       marginRight: '10px'
                     }}
                   >
-                    🛠️ Admin
+                    Admin
+                  </Link>
+                )}
+
+                {/* Botón de perfil para usuarios no administradores */}
+                {!isAdmin() && (
+                  <Link 
+                    to="/perfil" 
+                    onClick={() => setIsMenuOpen(false)}
+                    style={{ 
+                      padding: '5px 10px',
+                      backgroundColor: '#3498db',
+                      color: 'white',
+                      textDecoration: 'none',
+                      borderRadius: '4px',
+                      fontSize: '0.8em',
+                      marginRight: '10px'
+                    }}
+                  >
+                    Mi Perfil
                   </Link>
                 )}
                 

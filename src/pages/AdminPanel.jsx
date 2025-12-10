@@ -36,6 +36,14 @@ function AdminPanel() {
   const [feedback, setFeedback] = useState({ message: '', type: '' });
   const [toast, setToast] = useState({ message: '', type: '' });
   
+  // Estados para modal de confirmación
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  });
+  
   // Función para mostrar mensajes
   const showFeedback = (message, type = 'success') => {
     setToast({ message, type });
@@ -202,10 +210,10 @@ function AdminPanel() {
         imageFile: file
       }));
       
-      setToast({ message: '✅ Imagen subida exitosamente', type: 'success' });
+      setToast({ message: '✅ Imagen subida exitosamente a S3', type: 'success' });
     } catch (error) {
       console.error('Error al subir imagen:', error);
-      setToast({ message: 'Error al subir imagen. Puedes usar el preview local.', type: 'warning' });
+      setToast({ message: 'Error al subir imagen a S3. Intenta nuevamente.', type: 'error' });
     }
   };
 
@@ -282,21 +290,29 @@ function AdminPanel() {
   };
 
   // Eliminar usuario
-  const handleDeleteUser = async (userId, userName) => {
+  // Eliminar usuario
+  const handleDeleteUser = (userId, userName) => {
     if (userId === user.id) {
       showFeedback('No puedes eliminar tu propio usuario', 'error');
       return;
     }
 
-    if (window.confirm(`¿Estás seguro de eliminar al usuario "${userName}"?`)) {
-      try {
-        await UsuarioService.eliminarUsuario(userId);
-        showFeedback('Usuario eliminado exitosamente', 'success');
-        loadUsers();
-      } catch (err) {
-        showFeedback(err.message || 'Error al eliminar usuario', 'error');
+    setConfirmModal({
+      isOpen: true,
+      title: '⚠️ Eliminar Usuario',
+      message: `¿Estás seguro de que deseas eliminar al usuario "${userName}"?\n\nEsta acción no se puede deshacer.`,
+      onConfirm: async () => {
+        try {
+          await UsuarioService.eliminarUsuario(userId);
+          showFeedback(`✅ Usuario "${userName}" eliminado exitosamente`, 'success');
+          loadUsers();
+        } catch (err) {
+          showFeedback(err.message || 'Error al eliminar usuario', 'error');
+        } finally {
+          setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null });
+        }
       }
-    }
+    });
   };
 
   // Preparar edición
@@ -356,20 +372,27 @@ function AdminPanel() {
       console.log('🚀 Iniciando creación de producto...');
       console.log('📝 Datos del formulario:', productFormData);
       
+      // Determinar la URL de imagen
+      let imagenFinal = productFormData.linkImagen;
+      const defaultSvg = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="45%25" font-size="80" text-anchor="middle" dy=".3em"%3E🌱%3C/text%3E%3Ctext x="50%25" y="75%25" font-size="14" text-anchor="middle" fill="%23999"%3ESin imagen%3C/text%3E%3C/svg%3E';
+      
+      // Si la imagen es el SVG por defecto, base64, o está vacía, usar null
+      if (!imagenFinal || imagenFinal === defaultSvg || imagenFinal.startsWith('data:image')) {
+        imagenFinal = null;
+      }
+      
       const productData = {
-        ...productFormData,
+        idProducto: productFormData.idProducto,
+        nombre: productFormData.nombre,
+        descripcion: productFormData.descripcion || null,
         precio: parseFloat(productFormData.precio) || 0,
         stock: parseInt(productFormData.stock) || 0,
+        origen: productFormData.origen || null,
+        certificacionOrganica: productFormData.certificacionOrganica,
+        estaActivo: productFormData.estaActivo,
         idCategoria: parseInt(productFormData.idCategoria) || 1,
-        // Si no hay imagen, usar una genérica SVG embebida
-        linkImagen: productFormData.linkImagen || 
-                   productFormData.imagePreview || 
-                   'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="45%25" font-size="80" text-anchor="middle" dy=".3em"%3E🌱%3C/text%3E%3Ctext x="50%25" y="75%25" font-size="14" text-anchor="middle" fill="%23999"%3ESin imagen%3C/text%3E%3C/svg%3E'
+        linkImagen: imagenFinal
       };
-
-      // Eliminar campos temporales que no van a la DB
-      delete productData.imageFile;
-      delete productData.imagePreview;
 
       console.log('📦 Datos a enviar:', productData);
 
@@ -392,18 +415,39 @@ function AdminPanel() {
     
     setSavingProduct(true);
     try {
+      console.log('📝 Datos del formulario antes de procesar:', productFormData);
+      
+      // Determinar qué URL de imagen usar
+      let imagenFinal = productFormData.linkImagen;
+      
+      // Si la imagen es el SVG por defecto o está vacía, usar null
+      const defaultSvg = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="45%25" font-size="80" text-anchor="middle" dy=".3em"%3E🌱%3C/text%3E%3Ctext x="50%25" y="75%25" font-size="14" text-anchor="middle" fill="%23999"%3ESin imagen%3C/text%3E%3C/svg%3E';
+      
+      if (!imagenFinal || imagenFinal === defaultSvg) {
+        imagenFinal = null;
+      }
+      
       const productData = {
-        ...productFormData,
+        idProducto: productFormData.idProducto,
+        nombre: productFormData.nombre,
+        descripcion: productFormData.descripcion || null,
         precio: parseFloat(productFormData.precio),
         stock: parseInt(productFormData.stock),
-        idCategoria: parseInt(productFormData.idCategoria)
+        origen: productFormData.origen || null,
+        certificacionOrganica: productFormData.certificacionOrganica,
+        estaActivo: productFormData.estaActivo,
+        idCategoria: parseInt(productFormData.idCategoria),
+        linkImagen: imagenFinal
       };
+
+      console.log('📦 Datos a enviar al backend:', productData);
 
       await ProductoService.actualizarProducto(productData.idProducto, productData);
       showFeedback('Producto actualizado exitosamente', 'success');
       closeProductForm();
       loadProducts();
     } catch (err) {
+      console.error('❌ Error completo al actualizar:', err);
       showFeedback(err.message || 'Error al actualizar producto', 'error');
     } finally {
       setSavingProduct(false);
@@ -411,20 +455,29 @@ function AdminPanel() {
   };
 
   // Eliminar producto
-  const handleDeleteProduct = async (productId, productName) => {
-    if (window.confirm(`¿Estás seguro de eliminar el producto "${productName}"?`)) {
-      try {
-        await ProductoService.eliminarProducto(productId);
-        showFeedback('Producto eliminado exitosamente', 'success');
-        loadProducts();
-      } catch (err) {
-        showFeedback(err.message || 'Error al eliminar producto', 'error');
+  const handleDeleteProduct = (productId, productName) => {
+    setConfirmModal({
+      isOpen: true,
+      title: '🗑️ Eliminar Producto',
+      message: `¿Estás seguro de que deseas eliminar el producto "${productName}"?\n\nEsta acción no se puede deshacer.`,
+      onConfirm: async () => {
+        try {
+          await ProductoService.eliminarProducto(productId);
+          showFeedback(`✅ Producto "${productName}" eliminado exitosamente`, 'success');
+          loadProducts();
+        } catch (err) {
+          showFeedback(err.message || 'Error al eliminar producto', 'error');
+        } finally {
+          setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null });
+        }
       }
-    }
+    });
   };
 
   // Preparar edición de producto
   const startEditProduct = (product) => {
+    const imagenOriginal = product.linkImagen || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="45%25" font-size="80" text-anchor="middle" dy=".3em"%3E🌱%3C/text%3E%3Ctext x="50%25" y="75%25" font-size="14" text-anchor="middle" fill="%23999"%3ESin imagen%3C/text%3E%3C/svg%3E';
+    
     setProductFormData({
       idProducto: product.idProducto,
       nombre: product.nombre,
@@ -435,12 +488,17 @@ function AdminPanel() {
       certificacionOrganica: product.certificacionOrganica || false,
       estaActivo: product.estaActivo || true,
       idCategoria: product.idCategoria || 1,
-      linkImagen: product.linkImagen || '',
+      linkImagen: imagenOriginal,
       imageFile: null,
-      imagePreview: product.linkImagen || null
+      imagePreview: imagenOriginal
     });
     setEditingProduct(product);
     setShowCreateProductForm(false);
+    
+    // Hacer scroll automático hacia arriba
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   // Limpiar datos del formulario solamente
@@ -557,6 +615,92 @@ function AdminPanel() {
           type={toast.type} 
           onClose={() => setToast({ message: '', type: '' })} 
         />
+      )}
+
+      {/* Modal de confirmación personalizado */}
+      {confirmModal.isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+          onClick={() => setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null })}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '30px',
+              maxWidth: '500px',
+              width: '90%',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ 
+              margin: '0 0 15px 0', 
+              color: '#e74c3c',
+              fontSize: '1.3em'
+            }}>
+              {confirmModal.title}
+            </h3>
+            <p style={{ 
+              margin: '0 0 25px 0', 
+              color: '#2c3e50',
+              lineHeight: '1.6',
+              whiteSpace: 'pre-line',
+              fontSize: '1em'
+            }}>
+              {confirmModal.message}
+            </p>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'flex-end', 
+              gap: '10px' 
+            }}>
+              <button
+                onClick={() => setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null })}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#95a5a6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '1em',
+                  fontWeight: '500'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  confirmModal.onConfirm();
+                }}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#e74c3c',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '1em',
+                  fontWeight: '500'
+                }}
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <div style={{ marginBottom: '30px', borderBottom: '2px solid #2c3e50', paddingBottom: '10px' }}>

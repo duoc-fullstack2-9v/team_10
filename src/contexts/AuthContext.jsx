@@ -64,6 +64,11 @@ export const AuthProvider = ({ children }) => {
     UsuarioService.logout();
   };
 
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   // Funciones para verificar roles
   const isAdmin = () => user?.idTipoUsuario === 1;
   const isVendedor = () => user?.idTipoUsuario === 2;
@@ -85,6 +90,7 @@ export const AuthProvider = ({ children }) => {
     user,
     login,
     logout,
+    updateUser,
     loading,
     isAdmin,
     isVendedor,

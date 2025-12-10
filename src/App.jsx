@@ -14,43 +14,14 @@ import Login from './pages/Login'
 import AdminPanel from './pages/AdminPanel'
 import ReportesAdmin from './pages/ReportesAdmin'
 import TestAdmin from './pages/TestAdmin'
+import Nosotros from './pages/Nosotros'
+import Blogs from './pages/Blogs'
+import Contacto from './pages/Contacto'
+import Perfil from './pages/Perfil'
 import './App.css'
 // Corrección inteligente para macOS (solo cuando es necesario)
 import './assets/smart-compatibility.css'
 import './assets/smart-theme.js'
-
-function Nosotros() {
-  return (
-    <main className="main">
-      <div style={{ padding: '40px 5%', textAlign: 'center' }}>
-        <h1>Nosotros</h1>
-        <p>Página sobre nosotros - En construcción</p>
-      </div>
-    </main>
-  )
-}
-
-function Blogs() {
-  return (
-    <main className="main">
-      <div style={{ padding: '40px 5%', textAlign: 'center' }}>
-        <h1>Blogs</h1>
-        <p>Página de blogs - En construcción</p>
-      </div>
-    </main>
-  )
-}
-
-function Contacto() {
-  return (
-    <main className="main">
-      <div style={{ padding: '40px 5%', textAlign: 'center' }}>
-        <h1>Contacto</h1>
-        <p>Página de contacto - En construcción</p>
-      </div>
-    </main>
-  )
-}
 
 function App() {
   return (
@@ -70,6 +41,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/registro" element={<Registro />} />
               <Route path="/carrito" element={<Carrito />} />
+              <Route path="/perfil" element={<Perfil />} />
             
             {/* Rutas protegidas para administradores */}
             <Route 

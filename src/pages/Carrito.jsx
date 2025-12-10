@@ -1,10 +1,26 @@
 import { useCart } from '../contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import Toast from '../components/Toast';
 import ProductoService from '../services/producto.service';
 
 function Carrito() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, getTotalPrice, getTotalItems } = useCart();
   const navigate = useNavigate();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [toast, setToast] = useState({ message: '', type: '' });
+  const [paymentData, setPaymentData] = useState({
+    cardNumber: '',
+    cardName: '',
+    expiryDate: '',
+    cvv: ''
+  });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast({ message: '', type: '' }), 5000);
+  };
 
   // Función para manejar cambio de cantidad
   const handleQuantityChange = (productId, newQuantity) => {
@@ -22,25 +38,109 @@ function Carrito() {
     }).format(price);
   };
 
+  const handlePaymentInputChange = (e) => {
+    const { name, value } = e.target;
+    let formattedValue = value;
+
+    // Formatear número de tarjeta
+    if (name === 'cardNumber') {
+      formattedValue = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
+      if (formattedValue.length > 19) return;
+    }
+
+    // Formatear fecha de expiración
+    if (name === 'expiryDate') {
+      formattedValue = value.replace(/\D/g, '');
+      if (formattedValue.length >= 2) {
+        formattedValue = formattedValue.slice(0, 2) + '/' + formattedValue.slice(2, 4);
+      }
+      if (formattedValue.length > 5) return;
+    }
+
+    // Formatear CVV
+    if (name === 'cvv') {
+      formattedValue = value.replace(/\D/g, '').slice(0, 3);
+    }
+
+    setPaymentData(prev => ({
+      ...prev,
+      [name]: formattedValue
+    }));
+  };
+
+  const processPayment = async () => {
+    // Validaciones
+    if (!paymentData.cardNumber || !paymentData.cardName || !paymentData.expiryDate || !paymentData.cvv) {
+      showToast('Por favor completa todos los campos', 'error');
+      return;
+    }
+
+    if (paymentData.cardNumber.replace(/\s/g, '').length !== 16) {
+      showToast('El número de tarjeta debe tener 16 dígitos', 'error');
+      return;
+    }
+
+    if (paymentData.cvv.length !== 3) {
+      showToast('El CVV debe tener 3 dígitos', 'error');
+      return;
+    }
+
+    setProcessing(true);
+
+    // Simular procesamiento de pago
+    setTimeout(() => {
+      const transactionId = 'TXN-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+      
+      setProcessing(false);
+      setShowPaymentModal(false);
+      
+      showToast(`Pago procesado exitosamente. ID de transacción: ${transactionId}`, 'success');
+      
+      // Limpiar carrito después del pago
+      clearCart();
+      
+      // Resetear datos de pago
+      setPaymentData({
+        cardNumber: '',
+        cardName: '',
+        expiryDate: '',
+        cvv: ''
+      });
+
+      // Redirigir al home después de 3 segundos
+      setTimeout(() => {
+        navigate('/');
+      }, 3000);
+    }, 2000);
+  };
+
   // Si el carrito está vacío
   if (cartItems.length === 0) {
     return (
-      <div style={{
-        minHeight: '60vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 20px'
-      }}>
+      <>
+        {toast.message && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast({ message: '', type: '' })} 
+          />
+        )}
         <div style={{
-          textAlign: 'center',
-          maxWidth: '500px'
+          minHeight: '60vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px 20px'
         }}>
-          <h1 style={{ 
-            fontSize: '2.5em', 
-            marginBottom: '20px',
-            color: '#2c3e50' 
+          <div style={{
+            textAlign: 'center',
+            maxWidth: '500px'
+          }}>
+            <h1 style={{ 
+              fontSize: '2.5em', 
+              marginBottom: '20px',
+              color: '#2c3e50' 
           }}>
             🛒 Tu Carrito está Vacío
           </h1>
@@ -70,14 +170,24 @@ function Carrito() {
             Ver Productos
           </button>
         </div>
-      </div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div style={{
-      maxWidth: '1200px',
-      margin: '0 auto',
+    <>
+      {toast.message && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast({ message: '', type: '' })} 
+        />
+      )}
+
+      <div style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
       padding: '40px 20px',
       minHeight: '60vh'
     }}>
@@ -349,9 +459,9 @@ function Carrito() {
             }}
             onMouseEnter={(e) => e.target.style.backgroundColor = '#229954'}
             onMouseLeave={(e) => e.target.style.backgroundColor = '#27ae60'}
-            onClick={() => alert('Funcionalidad de checkout próximamente')}
+            onClick={() => setShowPaymentModal(true)}
           >
-            🛒 Proceder al Pago
+            Proceder al Pago
           </button>
 
           <button
@@ -383,6 +493,214 @@ function Carrito() {
         </div>
       </div>
     </div>
+
+    {/* Modal de pago */}
+    {showPaymentModal && (
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}
+        onClick={() => !processing && setShowPaymentModal(false)}
+      >
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            padding: '40px',
+            maxWidth: '500px',
+            width: '100%',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 style={{ 
+            margin: '0 0 10px 0', 
+            color: '#2c3e50',
+            fontSize: '1.8em'
+          }}>
+            Información de Pago
+          </h2>
+          <p style={{ 
+            margin: '0 0 25px 0', 
+            color: '#7f8c8d',
+            fontSize: '0.95em'
+          }}>
+            Total a pagar: <strong style={{ color: '#27ae60', fontSize: '1.2em' }}>{formatPrice(getTotalPrice())}</strong>
+          </p>
+
+          <form onSubmit={(e) => { e.preventDefault(); processPayment(); }}>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '8px', 
+                color: '#2c3e50',
+                fontWeight: '500' 
+              }}>
+                Número de tarjeta
+              </label>
+              <input
+                type="text"
+                name="cardNumber"
+                value={paymentData.cardNumber}
+                onChange={handlePaymentInputChange}
+                placeholder="1234 5678 9012 3456"
+                disabled={processing}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '5px',
+                  border: '1px solid #ddd',
+                  fontSize: '1em',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '8px', 
+                color: '#2c3e50',
+                fontWeight: '500' 
+              }}>
+                Nombre en la tarjeta
+              </label>
+              <input
+                type="text"
+                name="cardName"
+                value={paymentData.cardName}
+                onChange={handlePaymentInputChange}
+                placeholder="Juan Pérez"
+                disabled={processing}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '5px',
+                  border: '1px solid #ddd',
+                  fontSize: '1em',
+                  boxSizing: 'border-box',
+                  textTransform: 'uppercase'
+                }}
+              />
+            </div>
+
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: '1fr 1fr', 
+              gap: '15px',
+              marginBottom: '25px'
+            }}>
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  color: '#2c3e50',
+                  fontWeight: '500' 
+                }}>
+                  Fecha de expiración
+                </label>
+                <input
+                  type="text"
+                  name="expiryDate"
+                  value={paymentData.expiryDate}
+                  onChange={handlePaymentInputChange}
+                  placeholder="MM/AA"
+                  disabled={processing}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '5px',
+                    border: '1px solid #ddd',
+                    fontSize: '1em',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  color: '#2c3e50',
+                  fontWeight: '500' 
+                }}>
+                  CVV
+                </label>
+                <input
+                  type="text"
+                  name="cvv"
+                  value={paymentData.cvv}
+                  onChange={handlePaymentInputChange}
+                  placeholder="123"
+                  disabled={processing}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '5px',
+                    border: '1px solid #ddd',
+                    fontSize: '1em',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ 
+              display: 'flex', 
+              gap: '10px',
+              marginTop: '30px'
+            }}>
+              <button
+                type="button"
+                onClick={() => setShowPaymentModal(false)}
+                disabled={processing}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  backgroundColor: '#95a5a6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: processing ? 'not-allowed' : 'pointer',
+                  fontSize: '1em',
+                  fontWeight: '500'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={processing}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  backgroundColor: processing ? '#95a5a6' : '#27ae60',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: processing ? 'not-allowed' : 'pointer',
+                  fontSize: '1em',
+                  fontWeight: '500'
+                }}
+              >
+                {processing ? 'Procesando...' : 'Pagar'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 

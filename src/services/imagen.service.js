@@ -3,7 +3,7 @@
  * Usa el endpoint del microservicio de productos para generar URL prefirmada
  */
 
-import axios from './axios.config';
+import { axiosProducto } from './axios.config';
 
 const S3_CONFIG = {
   BUCKET_NAME: 'huerto-hogar-images',
@@ -38,11 +38,28 @@ class ImagenService {
       const fileName = `producto-${Date.now()}-${file.name}`;
 
       // 2. Obtener URL prefirmada del backend
-      const urlResponse = await axios.get('/api/productos/generar-url-subida', {
-        params: { fileName }
+      const urlResponse = await axiosProducto.post('/api/productos/upload-url', {
+        fileName: fileName,
+        contentType: file.type
       });
 
-      const { presignedUrl, publicUrl } = urlResponse.data;
+      console.log('📡 Respuesta del backend:', urlResponse.data);
+
+      // El backend puede devolver diferentes formatos, intentar todos
+      const presignedUrl = urlResponse.data.presignedUrl || 
+                          urlResponse.data.uploadUrl || 
+                          urlResponse.data.url;
+      
+      const publicUrl = urlResponse.data.publicUrl || 
+                       urlResponse.data.imageUrl || 
+                       urlResponse.data.linkImagen;
+
+      console.log('🔗 presignedUrl:', presignedUrl);
+      console.log('🌐 publicUrl:', publicUrl);
+
+      if (!presignedUrl) {
+        throw new Error('El servidor no devolvió una URL de subida válida');
+      }
 
       // 3. Subir archivo directamente a S3 usando la URL prefirmada
       await fetch(presignedUrl, {
@@ -54,7 +71,7 @@ class ImagenService {
       });
 
       // 4. Retornar la URL pública de la imagen
-      return publicUrl;
+      return publicUrl || presignedUrl;
     } catch (error) {
       console.error('Error subiendo imagen a S3:', error);
       throw new Error('Error al subir la imagen. Por favor intenta nuevamente.');
