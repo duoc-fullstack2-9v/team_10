@@ -33,7 +33,6 @@ function AdminPanel() {
   const [savingProduct, setSavingProduct] = useState(false);
 
   // Estados para mensajes de feedback
-  const [feedback, setFeedback] = useState({ message: '', type: '' });
   const [toast, setToast] = useState({ message: '', type: '' });
   
   // Estados para modal de confirmación
@@ -44,14 +43,9 @@ function AdminPanel() {
     onConfirm: null
   });
   
-  // Función para mostrar mensajes
+  // Función para mostrar mensajes (solo Toast)
   const showFeedback = (message, type = 'success') => {
     setToast({ message, type });
-    setFeedback({ message, type });
-    setTimeout(() => {
-      setFeedback({ message: '', type: '' });
-      setToast({ message: '', type: '' });
-    }, 5000);
   };
 
   // Estados para formularios de usuarios
@@ -588,26 +582,6 @@ function AdminPanel() {
         }
       `}</style>
       <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      {/* Mensaje de feedback */}
-      {feedback.message && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          padding: '15px 25px',
-          borderRadius: '8px',
-          backgroundColor: feedback.type === 'success' ? '#d4edda' : '#f8d7da',
-          color: feedback.type === 'success' ? '#155724' : '#721c24',
-          border: `1px solid ${feedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          zIndex: 9999,
-          maxWidth: '400px',
-          animation: 'slideIn 0.3s ease-out'
-        }}>
-          <strong>{feedback.type === 'success' ? '✓' : '✕'}</strong> {feedback.message}
-        </div>
-      )}
-
       {/* Toast notification component */}
       {toast.message && (
         <Toast 

@@ -342,7 +342,11 @@ function ProductDetail() {
                       textAlign: 'center',
                       border: '1px solid #ccc',
                       borderRadius: '4px',
-                      height: '40px'
+                      height: '40px',
+                      lineHeight: '1',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
                   />
 
@@ -404,7 +408,7 @@ function ProductDetail() {
                     </>
                   ) : (
                     <>
-                      🛒 Agregar al Carrito
+                      Agregar al Carrito
                     </>
                   )}
                 </button>

@@ -136,7 +136,11 @@ function ProductCard({
                 border: '1px solid #ccc',
                 borderRadius: '4px',
                 fontSize: '1em',
-                height: '30px'
+                height: '30px',
+                lineHeight: '1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             />
             <button
@@ -175,7 +179,7 @@ function ProductCard({
               backgroundColor: adding ? '#95a5a6' : undefined
             }}
           >
-            {adding ? '✓ Agregado' : '🛒 Agregar al Carrito'}
+            {adding ? '✓ Agregado' : 'Agregar al Carrito'}
           </button>
         </div>
       )}

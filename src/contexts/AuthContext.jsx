@@ -20,7 +20,15 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem('user');
     
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      const parsedUser = JSON.parse(savedUser);
+      
+      // Migración: Asegurar que el usuario tenga el campo 'id'
+      if (parsedUser && !parsedUser.id && parsedUser.idUsuario) {
+        parsedUser.id = parsedUser.idUsuario;
+        localStorage.setItem('user', JSON.stringify(parsedUser));
+      }
+      
+      setUser(parsedUser);
     }
     setLoading(false);
   }, []);

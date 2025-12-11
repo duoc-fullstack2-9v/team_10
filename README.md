@@ -6,9 +6,16 @@ Sistema de e-commerce desarrollado con React + Vite en el frontend, integrado co
 
 ## 📊 Estado del Proyecto: ✅ LISTO PARA ENTREGA
 
-**Última actualización**: 1 de diciembre de 2025  
+**Última actualización**: 11 de diciembre de 2025  
 **Rama actual**: `feature/integracion-microservicios-aws`  
 **Cumplimiento de rúbrica**: 9/9 criterios (100%)
+
+### 🆕 Últimas Actualizaciones
+- ✅ **Fix CORS**: Configuración de proxy Vite para desarrollo
+- ✅ **Fix actualización de perfil**: Endpoint PUT corregido (ID en body, no en URL)
+- ✅ **Seguridad mejorada**: Eliminados console.logs con información sensible
+- ✅ **UX mejorada**: Removidos emojis de botones, inputs de cantidad centrados
+- ✅ **Notificaciones**: Sistema Toast unificado (eliminadas alertas duplicadas)
 
 ---
 
@@ -123,7 +130,7 @@ team_10/
   - `POST /api/login` - Autenticación con BCrypt
   - `GET /api/usuarios` - Listar usuarios
   - `POST /api/usuarios` - Registrar usuario
-  - `PUT /api/usuarios/{id}` - Actualizar usuario
+  - `PUT /api/usuarios` - Actualizar usuario (ID en body)
   - `DELETE /api/usuarios/{id}` - Eliminar usuario
 
 ### Servicio de Productos
@@ -223,6 +230,8 @@ proxy: {
   }
 }
 ```
+
+**Nota importante**: Las instancias de axios usan `baseURL: ''` en desarrollo para que el proxy funcione correctamente y evitar errores CORS.
 
 ---
 

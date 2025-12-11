@@ -49,9 +49,11 @@ const UsuarioService = {
 
       // El microservicio devuelve los datos del usuario directamente en responseData
       const usuario = {
-        idUsuario: responseData.id,
+        id: responseData.id, // ID del usuario para operaciones CRUD
+        idUsuario: responseData.id, // Mantener compatibilidad
         nombre: responseData.nombre,
         email: responseData.email,
+        password: responseData.password, // Necesario para actualizaciones
         fechaRegistro: responseData.fechaRegistro,
         direccion: responseData.direccion,
         telefono: responseData.telefono,
@@ -136,9 +138,15 @@ const UsuarioService = {
    */
   async actualizarUsuario(id, userData) {
     try {
+      // El ID va en el body, NO en la URL
+      const dataWithId = {
+        id: id,
+        ...userData
+      };
+      
       const response = await axiosUsuario.put(
         API_CONFIG.USUARIO.ENDPOINTS.ACTUALIZAR_USUARIO,
-        { ...userData, id }
+        dataWithId
       );
       return response.data;
     } catch (error) {

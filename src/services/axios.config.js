@@ -4,16 +4,19 @@
 import axios from 'axios';
 import { API_TIMEOUT, COMMON_HEADERS } from '../config/api.config';
 
+// Detectar si estamos en desarrollo
+const isDevelopment = import.meta.env.DEV;
+
 // Crear instancia de Axios para Microservicio de Usuarios
 export const axiosUsuario = axios.create({
-  baseURL: 'http://34.193.190.24:8081',
+  baseURL: isDevelopment ? '' : 'http://34.193.190.24:8081',
   timeout: API_TIMEOUT,
   headers: COMMON_HEADERS
 });
 
 // Crear instancia de Axios para Microservicio de Productos
 export const axiosProducto = axios.create({
-  baseURL: 'http://34.202.46.121:8081',
+  baseURL: isDevelopment ? '' : 'http://34.202.46.121:8081',
   timeout: API_TIMEOUT,
   headers: COMMON_HEADERS
 });

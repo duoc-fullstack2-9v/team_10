@@ -105,7 +105,16 @@ function Perfil() {
         dataToUpdate.password = user.password;
       }
 
-      await UsuarioService.actualizarUsuario(user.id, dataToUpdate);
+      // Usar id o idUsuario (compatibilidad con ambas versiones)
+      const userId = user.id || user.idUsuario;
+      
+      if (!userId) {
+        showToast('Error: No se pudo identificar el usuario. Por favor, inicia sesión nuevamente.', 'error');
+        setTimeout(() => navigate('/login'), 2000);
+        return;
+      }
+
+      await UsuarioService.actualizarUsuario(userId, dataToUpdate);
       
       // Actualizar el contexto de autenticación
       updateUser({
