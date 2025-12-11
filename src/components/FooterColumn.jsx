@@ -10,11 +10,21 @@ function FooterColumn({
 }) {
   
   if (isLogo) {
+    const handleLogoClick = (e) => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    
     return (
       <div className="footer-col">
-        <Link className="footer-logo" to="/">
+        <a 
+          className="footer-logo" 
+          href="#" 
+          onClick={handleLogoClick}
+          style={{ cursor: 'pointer' }}
+        >
           Huerto<span>Hogar</span>
-        </Link>
+        </a>
         <p className="footer-text">{description}</p>
       </div>
     );

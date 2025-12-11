@@ -217,7 +217,8 @@ function Nosotros() {
           </h2>
           <p style={{ 
             fontSize: '1.1em', 
-            marginBottom: '30px', 
+            marginBottom: '30px',
+            color: 'white',
             opacity: 0.95 
           }}>
             Descubre nuestra selección de productos frescos y orgánicos
