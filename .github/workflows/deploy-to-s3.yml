@@ -47,13 +47,11 @@ jobs:
           # Sync files to S3
           aws s3 sync dist/ s3://${{ secrets.AWS_S3_BUCKET }} \
             --delete \
-            --cache-control max-age=31536000,public \
-            --acl public-read
+            --cache-control max-age=31536000,public
           
           # Update index.html with no-cache
           aws s3 cp dist/index.html s3://${{ secrets.AWS_S3_BUCKET }}/index.html \
-            --cache-control no-cache,no-store,must-revalidate \
-            --acl public-read
+            --cache-control no-cache,no-store,must-revalidate
       
       - name: Deployment successful
         run: |
