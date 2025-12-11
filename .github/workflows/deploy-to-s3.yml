@@ -37,11 +37,23 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ secrets.AWS_REGION }}
       
+      - name: Verify S3 access
+        run: |
+          echo "Testing S3 access..."
+          aws s3 ls s3://${{ secrets.AWS_S3_BUCKET }} || echo "⚠️ Cannot list bucket, but will try to upload"
+      
       - name: Deploy to S3
         run: |
-          aws s3 sync dist/ s3://${{ secrets.AWS_S3_BUCKET }} --delete --cache-control max-age=31536000,public
-          # Invalidar index.html para que siempre se actualice
-          aws s3 cp dist/index.html s3://${{ secrets.AWS_S3_BUCKET }}/index.html --cache-control no-cache,no-store,must-revalidate
+          # Sync files to S3
+          aws s3 sync dist/ s3://${{ secrets.AWS_S3_BUCKET }} \
+            --delete \
+            --cache-control max-age=31536000,public \
+            --acl public-read
+          
+          # Update index.html with no-cache
+          aws s3 cp dist/index.html s3://${{ secrets.AWS_S3_BUCKET }}/index.html \
+            --cache-control no-cache,no-store,must-revalidate \
+            --acl public-read
       
       - name: Deployment successful
         run: |
