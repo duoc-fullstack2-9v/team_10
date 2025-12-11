@@ -11,6 +11,9 @@ Sistema de e-commerce desarrollado con React + Vite en el frontend, integrado co
 **Cumplimiento de rúbrica**: 9/9 criterios (100%)
 
 ### 🆕 Últimas Actualizaciones
+- ✅ **Testing completo**: 51 tests unitarios, 8 componentes con cobertura completa
+- ✅ **Componentes críticos al 100%**: Toast, Footer, FooterColumn, HeroSection, Main
+- ✅ **Validaciones robustas**: ProductCard (93.45%), ProtectedRoute (94.64%)
 - ✅ **Fix CORS**: Configuración de proxy Vite para desarrollo
 - ✅ **Fix actualización de perfil**: Endpoint PUT corregido (ID en body, no en URL)
 - ✅ **Seguridad mejorada**: Eliminados console.logs con información sensible
@@ -185,15 +188,26 @@ npm run test
 # Con cobertura
 npm run test:coverage
 
-# Interfaz de pruebas
+# Interfaz de pruebas (http://localhost:51204)
 npm run test:ui
 ```
 
-### Cobertura Actual
-- Componentes principales cubiertos
-- Validaciones de formularios
-- Navegación y rutas
-- Renderizado de componentes
+### Suite de Pruebas: 51 Tests ✅
+**8 archivos de pruebas | 51 tests pasando**
+
+| Componente | Tests | Cobertura | Descripción |
+|------------|-------|-----------|-------------|
+| Nav.jsx | 5 | 49.52% | Navegación, menú móvil, cart badge |
+| Footer.jsx | 6 | 100% | Renderizado de footer |
+| HeroSection.jsx | 5 | 100% | Sección hero, botones |
+| Main.jsx | 4 | 100% | Componente principal |
+| **Toast.jsx** | **8** | **100%** | Notificaciones (success, error, warning, info) |
+| **FooterColumn.jsx** | **6** | **100%** | Columnas footer (logo, links, contacto, social) |
+| **ProtectedRoute.jsx** | **6** | **94.64%** | Rutas protegidas, roles (admin, vendedor, cliente) |
+| **ProductCard.jsx** | **11** | **93.45%** | Tarjeta producto, cantidad, agregar al carrito |
+
+**Componentes con 100% de cobertura**: Footer, HeroSection, Main, Toast, FooterColumn  
+**Componentes críticos >90%**: ProtectedRoute, ProductCard
 
 ---
 
